@@ -50,8 +50,8 @@ This adds a memex section to `AGENTS.md` that teaches your agent when to recall 
 
 | Platform | How |
 |----------|-----|
-| **npx users** (VS Code, Cursor, Windsurf) | Automatic — `npx -y` always fetches latest |
-| **Claude Code** | `npm update -g @touchskyer/memex` (plugin updates from marketplace) |
+| **npx users** (VS Code, Cursor, Windsurf) | `npx @touchskyer/memex@latest` (or clear npx cache and re-run) |
+| **Claude Code** | `/plugin update memex` |
 | **Codex / global install** | `npm update -g @touchskyer/memex` |
 
 ### Cross-platform sharing
