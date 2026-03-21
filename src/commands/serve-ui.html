@@ -759,7 +759,10 @@ body::-webkit-scrollbar { display: none; }
 
 .graph-card-panel {
   position: absolute;
-  width: 320px;
+  width: 360px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  scrollbar-width: none;
   z-index: 20;
   display: none;
   opacity: 0;
@@ -767,6 +770,7 @@ body::-webkit-scrollbar { display: none; }
   transition: opacity 0.2s, transform 0.25s cubic-bezier(0.34,1.2,0.64,1);
   pointer-events: auto;
 }
+.graph-card-panel::-webkit-scrollbar { display: none; }
 .graph-card-panel.open {
   display: block;
   opacity: 1;
@@ -1897,7 +1901,7 @@ body::-webkit-scrollbar { display: none; }
 
   function positionCardPanel(node) {
     const [sx, sy] = toScreen(node.x, node.y);
-    const panelW = 320;
+    const panelW = 360;
     const vw = window.innerWidth, vh = window.innerHeight;
 
     // Prefer right of node, fallback to left
@@ -1907,9 +1911,9 @@ body::-webkit-scrollbar { display: none; }
     }
     left = Math.max(16, Math.min(vw - panelW - 16, left));
 
-    // Vertically center on node, clamp to viewport
-    let top = sy - 60;
-    top = Math.max(16, Math.min(vh - 300, top));
+    // Vertically align to node, clamp to viewport
+    let top = sy - 40;
+    top = Math.max(16, Math.min(vh - 100, top));
 
     cardPanel.style.left = left + 'px';
     cardPanel.style.top = top + 'px';
@@ -1957,10 +1961,11 @@ body::-webkit-scrollbar { display: none; }
     canvas.style.cursor = hit ? 'pointer' : 'grab';
   });
 
-  // Stop card panel clicks from bubbling to canvas handler
+  // Stop card panel events from bubbling to canvas handler
   cardPanel.addEventListener('mousedown', (e) => e.stopPropagation());
   cardPanel.addEventListener('mouseup', (e) => e.stopPropagation());
   cardPanel.addEventListener('click', (e) => e.stopPropagation());
+  cardPanel.addEventListener('wheel', (e) => e.stopPropagation(), { passive: true });
 
   window.addEventListener('mouseup', (e) => {
     if (dragNode) { physicsActive = true; settleCounter = 0; dragNode = null; }
