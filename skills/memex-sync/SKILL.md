@@ -55,4 +55,4 @@ Tell the user the result. If sync failed, show the error message.
 
 - **Never force-push** — `memex sync` uses `git fetch` + `git merge` then `git push`
 - **On conflict** — report the error and tell the user to resolve manually in `~/.memex`
-- **Auto-sync** — only suggest `--auto on` if the user asks about it; don't enable by default
+- **Auto-sync** — only suggest `memex sync on` if the user asks about it; don't enable by default
