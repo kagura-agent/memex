@@ -46,7 +46,7 @@ export function registerOperations(
     description: "Save an insight after completing a task. Handles frontmatter, source injection, and sync automatically. Call this at the end of a task when you learned something worth remembering.",
     inputSchema: z.object({
       slug: z.string().describe("Card slug in kebab-case"),
-      title: z.string().describe("Card title"),
+      title: z.string().describe("Card title (keep short, ≤60 chars, noun phrase not full sentence)"),
       body: z.string().describe("Card body in markdown with [[wikilinks]]"),
       category: z.string().optional().describe("Category (e.g. frontend, architecture, devops, bugfix)"),
     }),

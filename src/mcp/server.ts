@@ -67,7 +67,7 @@ export function createMemexServer(store: CardStore, home?: string): McpServer {
     description: "Low-level write. Prefer memex_retro for task-end workflows (handles frontmatter and sync automatically).",
     inputSchema: z.object({
       slug: z.string().describe("Card slug in kebab-case (e.g. 'my-insight')"),
-      content: z.string().describe("Full card content: YAML frontmatter + markdown body"),
+      content: z.string().describe("Full card content: YAML frontmatter + markdown body. Title must be ≤60 chars, noun phrase not full sentence."),
       category: z.string().optional().describe("Card category (e.g. 'frontend', 'architecture', 'devops', 'bugfix')"),
     }),
   }, async ({ slug, content, category }) => {
