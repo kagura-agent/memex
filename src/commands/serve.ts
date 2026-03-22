@@ -7,9 +7,12 @@ import { dirname } from "node:path";
 import { execFile } from "node:child_process";
 import { CardStore } from "../lib/store.js";
 import { parseFrontmatter, extractLinks } from "../lib/parser.js";
+import { readSyncConfig } from "../lib/sync.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+const MEMRA_URL = "https://memra.vercel.app";
 
 let cachedHTML: string | null = null;
 
@@ -20,8 +23,45 @@ async function getHTML(): Promise<string> {
   return cachedHTML;
 }
 
+function injectBanner(html: string): string {
+  const banner = `
+<div id="sync-banner" style="
+  position:fixed;top:0;left:0;right:0;z-index:999;
+  background:linear-gradient(135deg,#007aff,#5856d6);
+  color:#fff;text-align:center;padding:8px 16px;
+  font-size:12px;font-weight:500;font-family:-apple-system,sans-serif;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+">
+  <span>Sync your cards to access them anywhere</span>
+  <code style="background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:4px;font-size:11px">memex sync --init</code>
+  <button onclick="this.parentElement.remove()" style="
+    background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;
+    font-size:16px;margin-left:8px;padding:0 4px;
+  ">&times;</button>
+</div>
+<style>#sync-banner ~ .wallpaper { top: 36px; } #sync-banner ~ .window { margin-top: 44px; height: calc(100vh - 56px); }</style>`;
+  return html.replace("<body>", "<body>" + banner);
+}
+
 export async function serveCommand(port: number): Promise<Server> {
   const home = process.env.MEMEX_HOME || join(homedir(), ".memex");
+
+  // Check if synced to GitHub → redirect to online
+  const syncConfig = await readSyncConfig(home);
+  if (syncConfig.remote) {
+    console.log(`Cards synced to ${syncConfig.remote}`);
+    console.log(`Opening ${MEMRA_URL}...`);
+    const bin = process.platform === "darwin" ? "open"
+      : process.platform === "win32" ? "start"
+      : "xdg-open";
+    execFile(bin, [MEMRA_URL], () => {});
+    // Return a dummy server that immediately closes
+    const server = createServer();
+    server.listen(0, () => server.close());
+    return server;
+  }
+
+  // No sync — serve locally with banner
   const store = new CardStore(join(home, "cards"), join(home, "archive"));
 
   const server = createServer(async (req, res) => {
@@ -48,7 +88,6 @@ export async function serveCommand(port: number): Promise<Server> {
             };
           })
         );
-        // Index card always first, then by date descending
         result.sort((a, b) => {
           if (a.slug === "index") return -1;
           if (b.slug === "index") return 1;
@@ -130,7 +169,8 @@ export async function serveCommand(port: number): Promise<Server> {
       }
 
       if (url.pathname === "/" || url.pathname === "/index.html") {
-        const html = await getHTML();
+        let html = await getHTML();
+        html = injectBanner(html);
         res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
         res.end(html);
         return;
@@ -162,6 +202,7 @@ export async function serveCommand(port: number): Promise<Server> {
       server.listen(currentPort, () => {
         const url = `http://localhost:${currentPort}`;
         console.log(`memex is running at ${url}`);
+        console.log("💡 Tip: Run 'memex sync --init' to sync and access your cards online");
         if (!process.env.MEMEX_NO_OPEN) {
           const bin = process.platform === "darwin" ? "open"
             : process.platform === "win32" ? "start"
