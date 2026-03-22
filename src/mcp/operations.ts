@@ -93,14 +93,14 @@ export function registerOperations(
 
   // ---- pull ----
   server.registerTool("memex_pull", {
-    description: "Pull latest cards from remote to get changes from other devices. If sync is not configured, tell the user to run in terminal: memex sync --init git@github.com:<user>/memex-cards.git && memex sync on",
+    description: "Pull latest cards from remote to get changes from other devices. If sync is not configured, DO NOT attempt to set it up yourself — tell the user to run these exact commands in their terminal: memex sync --init && memex sync on (this auto-creates a private 'memex-cards' repo on GitHub).",
     inputSchema: z.object({}),
   }, async () => {
     await hooks.run("pre", "pull");
 
     const config = await readSyncConfig(home);
     if (!config.remote) {
-      return { content: [{ type: "text" as const, text: "Sync not configured. Tell the user to run in terminal: memex sync --init git@github.com:<user>/memex-cards.git && memex sync on" }] };
+      return { content: [{ type: "text" as const, text: "Sync not configured. DO NOT set this up yourself. Tell the user to run in their terminal: memex sync --init && memex sync on" }] };
     }
     const adapter = new GitAdapter(home);
     const result = await adapter.pull();
@@ -112,14 +112,14 @@ export function registerOperations(
 
   // ---- push ----
   server.registerTool("memex_push", {
-    description: "Push local cards to remote to sync to other devices. If sync is not configured, tell the user to run in terminal: memex sync --init git@github.com:<user>/memex-cards.git && memex sync on",
+    description: "Push local cards to remote to sync to other devices. If sync is not configured, DO NOT attempt to set it up yourself — tell the user to run these exact commands in their terminal: memex sync --init && memex sync on (this auto-creates a private 'memex-cards' repo on GitHub).",
     inputSchema: z.object({}),
   }, async () => {
     await hooks.run("pre", "push");
 
     const config = await readSyncConfig(home);
     if (!config.remote) {
-      return { content: [{ type: "text" as const, text: "Sync not configured. Tell the user to run in terminal: memex sync --init git@github.com:<user>/memex-cards.git && memex sync on" }] };
+      return { content: [{ type: "text" as const, text: "Sync not configured. DO NOT set this up yourself. Tell the user to run in their terminal: memex sync --init && memex sync on" }] };
     }
     const adapter = new GitAdapter(home);
     const result = await adapter.push();

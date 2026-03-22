@@ -54,7 +54,7 @@ That's it — no extra setup needed. The MCP tool descriptions tell your agent w
 | Platform | How |
 |----------|-----|
 | **VS Code / Copilot** | Extension auto-updates from marketplace |
-| **Claude Code** | `/plugin update memex` |
+| **Claude Code** | `/plugin uninstall memex` then `/plugin install memex@memex` |
 | **Cursor / Codex / Windsurf** | `npm update -g @touchskyer/memex` |
 
 ### Cross-platform sharing
@@ -62,10 +62,11 @@ That's it — no extra setup needed. The MCP tool descriptions tell your agent w
 All clients read and write the same `~/.memex/cards/` directory. Sync across devices with git:
 
 ```bash
-memex sync --init git@github.com:you/memex-cards.git
-memex sync on      # enable auto-sync after every write
-memex sync         # manual sync
-memex sync off     # disable auto-sync
+memex sync --init                # auto-creates private memex-cards repo on GitHub (requires gh CLI)
+memex sync --init <repo-url>     # or specify your own repo URL
+memex sync on                    # enable auto-sync after every write
+memex sync                       # manual sync
+memex sync off                   # disable auto-sync
 ```
 
 ### Browse your memory

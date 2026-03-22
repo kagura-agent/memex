@@ -23,12 +23,12 @@ This project uses memex for persistent agent memory across sessions.
 | \`memex_push\` | Push local cards to remote |
 
 ### Cross-device sync
-To sync cards across devices, run in terminal:
+To sync cards across devices, the USER (not the agent) should run in terminal:
 \`\`\`
-memex sync --init git@github.com:<you>/memex-cards.git
+memex sync --init
 memex sync on
 \`\`\`
-Do NOT manually git init in ~/.memex — always use \`memex sync\` commands.
+This auto-creates a private \`memex-cards\` repo on GitHub. Do NOT manually run git commands in ~/.memex — always use \`memex sync\`.
 `;
 
 interface InitResult {
