@@ -301,7 +301,7 @@ Instalación completa, no se requiere configuración adicional. Las descripcione
 | Plataforma | Cómo |
 |------------|------|
 | **VS Code / Copilot** | La extensión se actualiza automáticamente desde el marketplace |
-| **Claude Code** | `/plugin update memex` |
+| **Claude Code** | `/plugin uninstall memex` → `/plugin install memex@memex` |
 | **Cursor / Codex / Windsurf** | `npm update -g @touchskyer/memex` |
 
 ---
