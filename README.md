@@ -19,11 +19,11 @@ No vector database, no embeddings — just markdown files your agent (and you) c
 | Platform | Integration | Experience |
 |----------|------------|------------|
 | **Claude Code** | Plugin (hooks + skills) | Best — auto-recall, slash commands, SessionStart hook |
-| **VS Code / Copilot** | MCP Server | 6 tools + AGENTS.md workflow |
-| **Cursor** | MCP Server | 6 tools + AGENTS.md workflow |
-| **Codex** | MCP Server | 6 tools + AGENTS.md workflow |
-| **Windsurf** | MCP Server | 6 tools + AGENTS.md workflow |
-| **Any MCP client** | MCP Server | 6 tools + AGENTS.md workflow |
+| **VS Code / Copilot** | MCP Server | 10 MCP tools, zero config |
+| **Cursor** | MCP Server | 10 MCP tools, zero config |
+| **Codex** | MCP Server | 10 MCP tools, zero config |
+| **Windsurf** | MCP Server | 10 MCP tools, zero config |
+| **Any MCP client** | MCP Server | 10 MCP tools, zero config |
 
 All platforms share the same `~/.memex/cards/` directory. A card written in Claude Code is instantly available in Cursor, Codex, or any other client.
 
@@ -45,13 +45,9 @@ All platforms share the same `~/.memex/cards/` directory. A card written in Clau
 | **Codex** | `npm install -g @touchskyer/memex && codex mcp add memex -- memex mcp` |
 | **Windsurf / others** | `npm install -g @touchskyer/memex`, then add MCP server: command `memex`, args `["mcp"]` |
 
-**Step 2: Set up your project** (Cursor, Copilot, Codex, Windsurf only — Claude Code users skip this)
+That's it — no extra setup needed. The MCP tool descriptions tell your agent when to recall and retro.
 
-```bash
-memex init
-```
-
-This adds a memex section to `AGENTS.md` that teaches your agent when to recall and retro. Without this, your agent won't know memex exists.
+**Optional:** Run `memex init` in a project directory to create an `AGENTS.md` with explicit workflow instructions, which can help some editors.
 
 ### Upgrade
 
@@ -78,7 +74,9 @@ memex sync off     # disable auto-sync
 memex serve
 ```
 
-Opens a visual timeline of all your cards at `localhost:3939`. Includes a **graph view** to explore bidirectional links:
+Opens a visual timeline of all your cards at `localhost:3939`. Includes a **graph view** to explore bidirectional links.
+
+If you've set up sync, `memex serve` opens [memra.vercel.app](https://memra.vercel.app) — a web UI with Timeline, Graph view, and Share card.
 
 ![Graph View](docs/images/graph-view.png)
 
@@ -122,11 +120,11 @@ AI 编程 agent 的持久记忆系统。让你的 agent 跨会话记住学到的
 | 平台 | 集成方式 | 体验 |
 |------|---------|------|
 | **Claude Code** | Plugin（hooks + skills） | 最佳——自动回顾、斜杠命令、SessionStart hook |
-| **VS Code / Copilot** | MCP Server | 6 个工具 + AGENTS.md 工作流 |
-| **Cursor** | MCP Server | 6 个工具 + AGENTS.md 工作流 |
-| **Codex** | MCP Server | 6 个工具 + AGENTS.md 工作流 |
-| **Windsurf** | MCP Server | 6 个工具 + AGENTS.md 工作流 |
-| **任何 MCP 客户端** | MCP Server | 6 个工具 + AGENTS.md 工作流 |
+| **VS Code / Copilot** | MCP Server | 10 个 MCP 工具，零配置 |
+| **Cursor** | MCP Server | 10 个 MCP 工具，零配置 |
+| **Codex** | MCP Server | 10 个 MCP 工具，零配置 |
+| **Windsurf** | MCP Server | 10 个 MCP 工具，零配置 |
+| **任何 MCP 客户端** | MCP Server | 10 个 MCP 工具，零配置 |
 
 所有平台共享同一个 `~/.memex/cards/` 目录。在 Claude Code 中写的卡片，在 Cursor、Codex 或其他客户端中即刻可用。
 
@@ -148,13 +146,9 @@ AI 编程 agent 的持久记忆系统。让你的 agent 跨会话记住学到的
 | **Codex** | `npm install -g @touchskyer/memex && codex mcp add memex -- memex mcp` |
 | **Windsurf / 其他** | `npm install -g @touchskyer/memex`，然后添加 MCP server：命令 `memex`，参数 `["mcp"]` |
 
-**第二步：配置项目**（仅 Cursor、Copilot、Codex、Windsurf 需要——Claude Code 用户跳过此步）
+安装完成，无需额外配置。MCP 工具描述会自动告诉 agent 何时 recall 和 retro。
 
-```bash
-memex init
-```
-
-这会在 `AGENTS.md` 中添加 memex 指令，教 agent 何时 recall 和 retro。不执行此步，agent 不会知道 memex 的存在。
+**可选：** 在项目目录运行 `memex init` 可创建 `AGENTS.md`，为部分编辑器提供额外的工作流指引。
 
 ---
 
@@ -171,11 +165,11 @@ AIコーディングエージェントのための永続メモリシステム。
 | プラットフォーム | 統合方式 | 体験 |
 |---------------|---------|------|
 | **Claude Code** | Plugin（hooks + skills） | 最高——自動リコール、スラッシュコマンド、SessionStart hook |
-| **VS Code / Copilot** | MCP Server | 6ツール + AGENTS.md ワークフロー |
-| **Cursor** | MCP Server | 6ツール + AGENTS.md ワークフロー |
-| **Codex** | MCP Server | 6ツール + AGENTS.md ワークフロー |
-| **Windsurf** | MCP Server | 6ツール + AGENTS.md ワークフロー |
-| **任意のMCPクライアント** | MCP Server | 6ツール + AGENTS.md ワークフロー |
+| **VS Code / Copilot** | MCP Server | 10 MCPツール、設定不要 |
+| **Cursor** | MCP Server | 10 MCPツール、設定不要 |
+| **Codex** | MCP Server | 10 MCPツール、設定不要 |
+| **Windsurf** | MCP Server | 10 MCPツール、設定不要 |
+| **任意のMCPクライアント** | MCP Server | 10 MCPツール、設定不要 |
 
 すべてのプラットフォームが同じ `~/.memex/cards/` ディレクトリを共有します。Claude Codeで書いたカードは、Cursor、Codex、その他のクライアントですぐに利用できます。
 
@@ -197,13 +191,7 @@ AIコーディングエージェントのための永続メモリシステム。
 | **Codex** | `npm install -g @touchskyer/memex && codex mcp add memex -- memex mcp` |
 | **Windsurf / その他** | `npm install -g @touchskyer/memex`、その後MCP serverを追加：コマンド `memex`、引数 `["mcp"]` |
 
-**ステップ2：プロジェクトを設定**（Cursor、Copilot、Codex、Windsurfのみ——Claude Codeユーザーはスキップ）
-
-```bash
-memex init
-```
-
-`AGENTS.md` にmemexセクションを追加し、エージェントにリコールとレトロのタイミングを教えます。これがないと、エージェントはmemexの存在を知りません。
+インストール完了、追加設定は不要です。MCPツールの説明がエージェントにリコールとレトロのタイミングを自動的に教えます。
 
 ### アップグレード
 
@@ -228,11 +216,11 @@ AI 코딩 에이전트를 위한 영구 메모리 시스템. 에이전트가 세
 | 플랫폼 | 통합 방식 | 경험 |
 |--------|---------|------|
 | **Claude Code** | Plugin (hooks + skills) | 최고 — 자동 리콜, 슬래시 명령, SessionStart hook |
-| **VS Code / Copilot** | MCP Server | 6개 도구 + AGENTS.md 워크플로우 |
-| **Cursor** | MCP Server | 6개 도구 + AGENTS.md 워크플로우 |
-| **Codex** | MCP Server | 6개 도구 + AGENTS.md 워크플로우 |
-| **Windsurf** | MCP Server | 6개 도구 + AGENTS.md 워크플로우 |
-| **모든 MCP 클라이언트** | MCP Server | 6개 도구 + AGENTS.md 워크플로우 |
+| **VS Code / Copilot** | MCP Server | 10개 MCP 도구, 설정 불필요 |
+| **Cursor** | MCP Server | 10개 MCP 도구, 설정 불필요 |
+| **Codex** | MCP Server | 10개 MCP 도구, 설정 불필요 |
+| **Windsurf** | MCP Server | 10개 MCP 도구, 설정 불필요 |
+| **모든 MCP 클라이언트** | MCP Server | 10개 MCP 도구, 설정 불필요 |
 
 모든 플랫폼이 동일한 `~/.memex/cards/` 디렉토리를 공유합니다. Claude Code에서 작성한 카드를 Cursor, Codex 또는 다른 클라이언트에서 즉시 사용할 수 있습니다.
 
@@ -254,13 +242,7 @@ AI 코딩 에이전트를 위한 영구 메모리 시스템. 에이전트가 세
 | **Codex** | `npm install -g @touchskyer/memex && codex mcp add memex -- memex mcp` |
 | **Windsurf / 기타** | `npm install -g @touchskyer/memex`, 그런 다음 MCP server 추가: 명령 `memex`, 인수 `["mcp"]` |
 
-**2단계: 프로젝트 설정** (Cursor, Copilot, Codex, Windsurf만 — Claude Code 사용자는 건너뛰기)
-
-```bash
-memex init
-```
-
-`AGENTS.md`에 memex 섹션을 추가하여 에이전트에게 리콜과 레트로 시점을 알려줍니다. 이것이 없으면 에이전트는 memex의 존재를 알지 못합니다.
+설치 완료, 추가 설정이 필요 없습니다. MCP 도구 설명이 에이전트에게 리콜과 레트로 시점을 자동으로 알려줍니다.
 
 ### 업그레이드
 
@@ -285,11 +267,11 @@ Sin base de datos vectorial, sin embeddings — solo archivos markdown que tu ag
 | Plataforma | Integración | Experiencia |
 |------------|------------|-------------|
 | **Claude Code** | Plugin (hooks + skills) | Mejor — auto-recall, comandos slash, SessionStart hook |
-| **VS Code / Copilot** | MCP Server | 6 herramientas + flujo AGENTS.md |
-| **Cursor** | MCP Server | 6 herramientas + flujo AGENTS.md |
-| **Codex** | MCP Server | 6 herramientas + flujo AGENTS.md |
-| **Windsurf** | MCP Server | 6 herramientas + flujo AGENTS.md |
-| **Cualquier cliente MCP** | MCP Server | 6 herramientas + flujo AGENTS.md |
+| **VS Code / Copilot** | MCP Server | 10 herramientas MCP, sin configuración |
+| **Cursor** | MCP Server | 10 herramientas MCP, sin configuración |
+| **Codex** | MCP Server | 10 herramientas MCP, sin configuración |
+| **Windsurf** | MCP Server | 10 herramientas MCP, sin configuración |
+| **Cualquier cliente MCP** | MCP Server | 10 herramientas MCP, sin configuración |
 
 Todas las plataformas comparten el mismo directorio `~/.memex/cards/`. Una tarjeta escrita en Claude Code está disponible instantáneamente en Cursor, Codex o cualquier otro cliente.
 
@@ -311,13 +293,7 @@ Todas las plataformas comparten el mismo directorio `~/.memex/cards/`. Una tarje
 | **Codex** | `npm install -g @touchskyer/memex && codex mcp add memex -- memex mcp` |
 | **Windsurf / otros** | `npm install -g @touchskyer/memex`, luego agregar MCP server: comando `memex`, args `["mcp"]` |
 
-**Paso 2: Configura tu proyecto** (solo Cursor, Copilot, Codex, Windsurf — usuarios de Claude Code salten este paso)
-
-```bash
-memex init
-```
-
-Agrega una sección memex a `AGENTS.md` que enseña a tu agente cuándo hacer recall y retro. Sin esto, tu agente no sabrá que memex existe.
+Instalación completa, no se requiere configuración adicional. Las descripciones de las herramientas MCP le dicen automáticamente a tu agente cuándo hacer recall y retro.
 
 ### Actualización
 
