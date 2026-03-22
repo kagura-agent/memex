@@ -157,6 +157,7 @@ program
     const store = getStore();
     const server = createMemexServer(store, home);
     const transport = new StdioServerTransport();
+    console.error("memex MCP server running on stdio");
     await server.connect(transport);
   });
 

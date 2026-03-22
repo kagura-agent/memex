@@ -27,32 +27,39 @@ No vector database, no embeddings — just markdown files your agent (and you) c
 
 All platforms share the same `~/.memex/cards/` directory. A card written in Claude Code is instantly available in Cursor, Codex, or any other client.
 
+### Prerequisites
+
+- **VS Code / Copilot**: No prerequisites — the extension bundles everything
+- **Claude Code**: No prerequisites — the plugin handles everything
+- **All other platforms** (Cursor, Codex, Windsurf, etc.): Requires [Node.js 18+](https://nodejs.org/)
+
 ### Install
+
+**Step 1: Add memex to your editor**
 
 | Platform | Command |
 |----------|---------|
-| **Any editor** | `npx add-mcp @touchskyer/memex -- mcp` |
+| **VS Code / Copilot** | Search "memex" in [VS Code Extensions](https://marketplace.visualstudio.com/items?itemName=touchskyer.memex-mcp) — install and done, no extra setup |
 | **Claude Code** | `/plugin marketplace add iamtouchskyer/memex` then `/plugin install memex@memex` |
-| **VS Code / Copilot** | Search "memex" in [VS Code Extensions](https://marketplace.visualstudio.com/items?itemName=touchskyer.memex-mcp) or [MCP Registry](https://registry.modelcontextprotocol.io) |
-| **Cursor** | [One-click install](cursor://anysphere.cursor-deeplink/mcp/install?name=memex&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkB0b3VjaHNreWVyL21lbWV4IiwibWNwIl19) |
-| **Codex** | `codex mcp add memex -- npx -y @touchskyer/memex mcp` |
-| **Windsurf / others** | Add MCP server: command `npx`, args `["-y", "@touchskyer/memex", "mcp"]` |
+| **Cursor** | First `npm install -g @touchskyer/memex`, then [one-click install](cursor://anysphere.cursor-deeplink/mcp/install?name=memex&config=eyJjb21tYW5kIjoibWVtZXgiLCJhcmdzIjpbIm1jcCJdfQ==) |
+| **Codex** | `npm install -g @touchskyer/memex && codex mcp add memex -- memex mcp` |
+| **Windsurf / others** | `npm install -g @touchskyer/memex`, then add MCP server: command `memex`, args `["mcp"]` |
 
-**Then, in your project directory:**
+**Step 2: Set up your project** (Cursor, Copilot, Codex, Windsurf only — Claude Code users skip this)
 
 ```bash
-npx @touchskyer/memex init
+memex init
 ```
 
-This adds a memex section to `AGENTS.md` that teaches your agent when to recall and retro. Works with Cursor, Copilot, Codex, and Windsurf. Claude Code users don't need this — the plugin handles it.
+This adds a memex section to `AGENTS.md` that teaches your agent when to recall and retro. Without this, your agent won't know memex exists.
 
 ### Upgrade
 
 | Platform | How |
 |----------|-----|
-| **npx users** (VS Code, Cursor, Windsurf) | `npx @touchskyer/memex@latest` (or clear npx cache and re-run) |
+| **VS Code / Copilot** | Extension auto-updates from marketplace |
 | **Claude Code** | `/plugin update memex` |
-| **Codex / global install** | `npm update -g @touchskyer/memex` |
+| **Cursor / Codex / Windsurf** | `npm update -g @touchskyer/memex` |
 
 ### Cross-platform sharing
 
@@ -123,24 +130,31 @@ AI 编程 agent 的持久记忆系统。让你的 agent 跨会话记住学到的
 
 所有平台共享同一个 `~/.memex/cards/` 目录。在 Claude Code 中写的卡片，在 Cursor、Codex 或其他客户端中即刻可用。
 
+### 前置要求
+
+- **VS Code / Copilot**：无需额外安装——扩展内置了所有依赖
+- **Claude Code**：无需额外安装——plugin 自动处理
+- **其他平台**（Cursor、Codex、Windsurf 等）：需要 [Node.js 18+](https://nodejs.org/)
+
 ### 安装
+
+**第一步：添加 memex 到编辑器**
 
 | 平台 | 命令 |
 |------|------|
-| **任意编辑器** | `npx add-mcp @touchskyer/memex -- mcp` |
+| **VS Code / Copilot** | 在 [VS Code 扩展商店](https://marketplace.visualstudio.com/items?itemName=touchskyer.memex-mcp) 搜索 "memex"——安装即用，无需其他配置 |
 | **Claude Code** | `/plugin marketplace add iamtouchskyer/memex`，然后 `/plugin install memex@memex` |
-| **VS Code / Copilot** | 从 [MCP Registry](https://registry.modelcontextprotocol.io) 一键安装，或 `code --add-mcp '{"name":"memex","command":"npx","args":["-y","@touchskyer/memex","mcp"]}'` |
-| **Cursor** | [一键安装](cursor://anysphere.cursor-deeplink/mcp/install?name=memex&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkB0b3VjaHNreWVyL21lbWV4IiwibWNwIl19) |
-| **Codex** | `codex mcp add memex -- npx -y @touchskyer/memex mcp` |
-| **Windsurf / 其他** | 添加 MCP server：命令 `npx`，参数 `["-y", "@touchskyer/memex", "mcp"]` |
+| **Cursor** | 先 `npm install -g @touchskyer/memex`，然后 [一键安装](cursor://anysphere.cursor-deeplink/mcp/install?name=memex&config=eyJjb21tYW5kIjoibWVtZXgiLCJhcmdzIjpbIm1jcCJdfQ==) |
+| **Codex** | `npm install -g @touchskyer/memex && codex mcp add memex -- memex mcp` |
+| **Windsurf / 其他** | `npm install -g @touchskyer/memex`，然后添加 MCP server：命令 `memex`，参数 `["mcp"]` |
 
-**然后，在项目目录中运行：**
+**第二步：配置项目**（仅 Cursor、Copilot、Codex、Windsurf 需要——Claude Code 用户跳过此步）
 
 ```bash
-npx @touchskyer/memex init
+memex init
 ```
 
-这会在 `AGENTS.md` 中添加 memex 指令，教 agent 何时 recall 和 retro。适用于 Cursor、Copilot、Codex 和 Windsurf。Claude Code 用户无需此步——plugin 已自动处理。
+这会在 `AGENTS.md` 中添加 memex 指令，教 agent 何时 recall 和 retro。不执行此步，agent 不会知道 memex 的存在。
 
 ---
 
@@ -165,24 +179,39 @@ AIコーディングエージェントのための永続メモリシステム。
 
 すべてのプラットフォームが同じ `~/.memex/cards/` ディレクトリを共有します。Claude Codeで書いたカードは、Cursor、Codex、その他のクライアントですぐに利用できます。
 
+### 前提条件
+
+- **VS Code / Copilot**：前提条件なし——拡張機能がすべてをバンドル
+- **Claude Code**：前提条件なし——プラグインがすべてを処理
+- **その他のプラットフォーム**（Cursor、Codex、Windsurf等）：[Node.js 18+](https://nodejs.org/) が必要
+
 ### インストール
+
+**ステップ1：エディタにmemexを追加**
 
 | プラットフォーム | コマンド |
 |---------------|---------|
-| **任意のエディタ** | `npx add-mcp @touchskyer/memex -- mcp` |
-| **Claude Code** | `/plugin marketplace add iamtouchskyer/memex` → `/plugin install memex@memex` |
-| **VS Code / Copilot** | [MCP Registry](https://registry.modelcontextprotocol.io)からワンクリックインストール、または `code --add-mcp '{"name":"memex","command":"npx","args":["-y","@touchskyer/memex","mcp"]}'` |
-| **Cursor** | [ワンクリックインストール](cursor://anysphere.cursor-deeplink/mcp/install?name=memex&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkB0b3VjaHNreWVyL21lbWV4IiwibWNwIl19) |
-| **Codex** | `codex mcp add memex -- npx -y @touchskyer/memex mcp` |
-| **Windsurf / その他** | MCP serverを追加：コマンド `npx`、引数 `["-y", "@touchskyer/memex", "mcp"]` |
+| **VS Code / Copilot** | [VS Code 拡張機能](https://marketplace.visualstudio.com/items?itemName=touchskyer.memex-mcp)で "memex" を検索——インストールするだけ、追加設定不要 |
+| **Claude Code** | `/plugin marketplace add iamtouchskyer/memex`、その後 `/plugin install memex@memex` |
+| **Cursor** | まず `npm install -g @touchskyer/memex`、その後 [ワンクリックインストール](cursor://anysphere.cursor-deeplink/mcp/install?name=memex&config=eyJjb21tYW5kIjoibWVtZXgiLCJhcmdzIjpbIm1jcCJdfQ==) |
+| **Codex** | `npm install -g @touchskyer/memex && codex mcp add memex -- memex mcp` |
+| **Windsurf / その他** | `npm install -g @touchskyer/memex`、その後MCP serverを追加：コマンド `memex`、引数 `["mcp"]` |
 
-**次に、プロジェクトディレクトリで：**
+**ステップ2：プロジェクトを設定**（Cursor、Copilot、Codex、Windsurfのみ——Claude Codeユーザーはスキップ）
 
 ```bash
-npx @touchskyer/memex init
+memex init
 ```
 
-`AGENTS.md` にmemexセクションを追加し、エージェントにリコールとレトロのタイミングを教えます。Cursor、Copilot、Codex、Windsurfで動作します。Claude Codeユーザーはこの手順不要——プラグインが自動処理します。
+`AGENTS.md` にmemexセクションを追加し、エージェントにリコールとレトロのタイミングを教えます。これがないと、エージェントはmemexの存在を知りません。
+
+### アップグレード
+
+| プラットフォーム | 方法 |
+|---------------|------|
+| **VS Code / Copilot** | 拡張機能がマーケットプレイスから自動更新 |
+| **Claude Code** | `/plugin update memex` |
+| **Cursor / Codex / Windsurf** | `npm update -g @touchskyer/memex` |
 
 ---
 
@@ -207,24 +236,39 @@ AI 코딩 에이전트를 위한 영구 메모리 시스템. 에이전트가 세
 
 모든 플랫폼이 동일한 `~/.memex/cards/` 디렉토리를 공유합니다. Claude Code에서 작성한 카드를 Cursor, Codex 또는 다른 클라이언트에서 즉시 사용할 수 있습니다.
 
+### 전제 조건
+
+- **VS Code / Copilot**: 전제 조건 없음 — 확장 프로그램에 모든 것이 포함
+- **Claude Code**: 전제 조건 없음 — 플러그인이 모든 것을 처리
+- **기타 플랫폼** (Cursor, Codex, Windsurf 등): [Node.js 18+](https://nodejs.org/) 필요
+
 ### 설치
+
+**1단계: 에디터에 memex 추가**
 
 | 플랫폼 | 명령 |
 |--------|------|
-| **모든 에디터** | `npx add-mcp @touchskyer/memex -- mcp` |
+| **VS Code / Copilot** | [VS Code 확장](https://marketplace.visualstudio.com/items?itemName=touchskyer.memex-mcp)에서 "memex" 검색 — 설치하면 끝, 추가 설정 불필요 |
 | **Claude Code** | `/plugin marketplace add iamtouchskyer/memex` 후 `/plugin install memex@memex` |
-| **VS Code / Copilot** | [MCP Registry](https://registry.modelcontextprotocol.io)에서 원클릭 설치 또는 `code --add-mcp '{"name":"memex","command":"npx","args":["-y","@touchskyer/memex","mcp"]}'` |
-| **Cursor** | [원클릭 설치](cursor://anysphere.cursor-deeplink/mcp/install?name=memex&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkB0b3VjaHNreWVyL21lbWV4IiwibWNwIl19) |
-| **Codex** | `codex mcp add memex -- npx -y @touchskyer/memex mcp` |
-| **Windsurf / 기타** | MCP server 추가: 명령 `npx`, 인수 `["-y", "@touchskyer/memex", "mcp"]` |
+| **Cursor** | 먼저 `npm install -g @touchskyer/memex`, 그런 다음 [원클릭 설치](cursor://anysphere.cursor-deeplink/mcp/install?name=memex&config=eyJjb21tYW5kIjoibWVtZXgiLCJhcmdzIjpbIm1jcCJdfQ==) |
+| **Codex** | `npm install -g @touchskyer/memex && codex mcp add memex -- memex mcp` |
+| **Windsurf / 기타** | `npm install -g @touchskyer/memex`, 그런 다음 MCP server 추가: 명령 `memex`, 인수 `["mcp"]` |
 
-**그런 다음 프로젝트 디렉토리에서:**
+**2단계: 프로젝트 설정** (Cursor, Copilot, Codex, Windsurf만 — Claude Code 사용자는 건너뛰기)
 
 ```bash
-npx @touchskyer/memex init
+memex init
 ```
 
-`AGENTS.md`에 memex 섹션을 추가하여 에이전트에게 리콜과 레트로 시점을 알려줍니다. Cursor, Copilot, Codex, Windsurf에서 작동합니다. Claude Code 사용자는 불필요 — 플러그인이 자동 처리합니다.
+`AGENTS.md`에 memex 섹션을 추가하여 에이전트에게 리콜과 레트로 시점을 알려줍니다. 이것이 없으면 에이전트는 memex의 존재를 알지 못합니다.
+
+### 업그레이드
+
+| 플랫폼 | 방법 |
+|--------|------|
+| **VS Code / Copilot** | 확장 프로그램이 마켓플레이스에서 자동 업데이트 |
+| **Claude Code** | `/plugin update memex` |
+| **Cursor / Codex / Windsurf** | `npm update -g @touchskyer/memex` |
 
 ---
 
@@ -249,24 +293,39 @@ Sin base de datos vectorial, sin embeddings — solo archivos markdown que tu ag
 
 Todas las plataformas comparten el mismo directorio `~/.memex/cards/`. Una tarjeta escrita en Claude Code está disponible instantáneamente en Cursor, Codex o cualquier otro cliente.
 
+### Requisitos previos
+
+- **VS Code / Copilot**: Sin requisitos previos — la extensión incluye todo
+- **Claude Code**: Sin requisitos previos — el plugin se encarga de todo
+- **Otras plataformas** (Cursor, Codex, Windsurf, etc.): Requiere [Node.js 18+](https://nodejs.org/)
+
 ### Instalación
+
+**Paso 1: Agrega memex a tu editor**
 
 | Plataforma | Comando |
 |------------|---------|
-| **Cualquier editor** | `npx add-mcp @touchskyer/memex -- mcp` |
-| **Claude Code** | `/plugin marketplace add iamtouchskyer/memex` luego `/plugin install memex@memex` |
-| **VS Code / Copilot** | [Instalar desde MCP Registry](https://registry.modelcontextprotocol.io) o `code --add-mcp '{"name":"memex","command":"npx","args":["-y","@touchskyer/memex","mcp"]}'` |
-| **Cursor** | [Instalación con un clic](cursor://anysphere.cursor-deeplink/mcp/install?name=memex&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkB0b3VjaHNreWVyL21lbWV4IiwibWNwIl19) |
-| **Codex** | `codex mcp add memex -- npx -y @touchskyer/memex mcp` |
-| **Windsurf / otros** | Agregar MCP server: comando `npx`, args `["-y", "@touchskyer/memex", "mcp"]` |
+| **VS Code / Copilot** | Busca "memex" en [VS Code Extensions](https://marketplace.visualstudio.com/items?itemName=touchskyer.memex-mcp) — instala y listo, sin configuración adicional |
+| **Claude Code** | `/plugin marketplace add iamtouchskyer/memex`, luego `/plugin install memex@memex` |
+| **Cursor** | Primero `npm install -g @touchskyer/memex`, luego [instalación con un clic](cursor://anysphere.cursor-deeplink/mcp/install?name=memex&config=eyJjb21tYW5kIjoibWVtZXgiLCJhcmdzIjpbIm1jcCJdfQ==) |
+| **Codex** | `npm install -g @touchskyer/memex && codex mcp add memex -- memex mcp` |
+| **Windsurf / otros** | `npm install -g @touchskyer/memex`, luego agregar MCP server: comando `memex`, args `["mcp"]` |
 
-**Luego, en el directorio de tu proyecto:**
+**Paso 2: Configura tu proyecto** (solo Cursor, Copilot, Codex, Windsurf — usuarios de Claude Code salten este paso)
 
 ```bash
-npx @touchskyer/memex init
+memex init
 ```
 
-Agrega una sección memex a `AGENTS.md` que enseña a tu agente cuándo hacer recall y retro. Funciona con Cursor, Copilot, Codex y Windsurf. Los usuarios de Claude Code no necesitan esto — el plugin lo maneja automáticamente.
+Agrega una sección memex a `AGENTS.md` que enseña a tu agente cuándo hacer recall y retro. Sin esto, tu agente no sabrá que memex existe.
+
+### Actualización
+
+| Plataforma | Cómo |
+|------------|------|
+| **VS Code / Copilot** | La extensión se actualiza automáticamente desde el marketplace |
+| **Claude Code** | `/plugin update memex` |
+| **Cursor / Codex / Windsurf** | `npm update -g @touchskyer/memex` |
 
 ---
 
