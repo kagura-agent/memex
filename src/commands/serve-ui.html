@@ -973,6 +973,15 @@ body::-webkit-scrollbar { display: none; }
     bugfix: '#ff3b30', integration: '#af52de', review: '#5ac8fa',
     backend: '#5856d6', security: '#ff2d55', infra: '#ff9500',
   };
+  // Client source badge colors — no blue (avoid clash with [[links]])
+  const clientColors = {
+    'claude-code': '#34c759',       // green
+    'cursor': '#ff9500',            // orange
+    'vscode': '#af52de',            // purple
+    'codex-mcp-client': '#ff3b30',  // red
+    'windsurf': '#5856d6',          // indigo
+    'mcp': '#8e8e93',               // gray
+  };
 
   // ---- Keyboard shortcut ----
   document.addEventListener('keydown', (e) => {
@@ -1201,11 +1210,13 @@ body::-webkit-scrollbar { display: none; }
     const badgeClass = cat ? '' : (sourceColors[src] || 'default');
     const badgeStyle = catColor ? 'background:' + catColor + '18;color:' + catColor : '';
     const srcLabel = cat && src ? src : '';
+    const srcColor = clientColors[src] || '#8e8e93';
+    const srcBadgeStyle = srcLabel ? 'background:' + srcColor + '18;color:' + srcColor + ';padding:1px 6px;border-radius:8px;font-size:9px;font-weight:500' : '';
     const delay = Math.min(index * 0.03, 0.6);
     return '<div class="card' + (isExpanded ? ' expanded' : '') + '" data-slug="' + esc(c.slug) + '" id="card-' + esc(c.slug) + '" style="animation-delay:' + delay + 's">'
       + '<div class="card-header">'
       + '<span class="source-badge ' + badgeClass + '"' + (badgeStyle ? ' style="' + badgeStyle + '"' : '') + '>' + esc(badgeLabel) + '</span>'
-      + (srcLabel ? '<span class="card-dot">\u00b7</span><span class="card-time" style="opacity:0.5">' + esc(srcLabel) + '</span>' : '')
+      + (srcLabel ? '<span class="card-dot">\u00b7</span><span style="' + srcBadgeStyle + '">' + esc(srcLabel) + '</span>' : '')
       + '<span class="card-dot">\u00b7</span>'
       + '<span class="card-time">' + esc(time || c.created?.slice(0,10) || '') + '</span>'
       + '</div>'
