@@ -9,10 +9,16 @@ You have access to a Zettelkasten memory system via the `memex` CLI. Before star
 
 ## Tools Available
 
-- `memex read index` — read the keyword index (concept → card mapping)
-- `memex search <query>` — full-text search body content, returns top 10 card summaries
-- `memex read <slug>` — read a card's full content
-- `memex search` (no args) — list all cards
+Two equivalent interfaces exist — use whichever your environment supports:
+
+| CLI (Claude Code with memex in PATH) | MCP tool (VSCode / Cursor / any MCP client) |
+|---------------------------------------|----------------------------------------------|
+| `memex read index`                    | `memex_read` with slug `index`               |
+| `memex search <query>`               | `memex_search` with query arg                |
+| `memex read <slug>`                   | `memex_read` with slug arg                   |
+| `memex search` (no args)             | `memex_search` with no args                  |
+
+The rest of this skill uses CLI syntax for brevity. Substitute MCP tool calls if CLI is unavailable.
 
 ## Process
 

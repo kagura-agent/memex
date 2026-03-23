@@ -9,12 +9,18 @@ You are maintaining a Zettelkasten memory system. Your job is to keep the card n
 
 ## Tools Available
 
-- `memex search [query]` — search cards or list all
-- `memex read <slug>` — read a card
-- `memex write <slug>` — write/update a card (pipe content via stdin)
-- `memex links` — global link graph statistics
-- `memex links <slug>` — specific card's inbound/outbound links
-- `memex archive <slug>` — move card to archive
+Two equivalent interfaces exist — use whichever your environment supports:
+
+| CLI (Claude Code with memex in PATH) | MCP tool (VSCode / Cursor / any MCP client) |
+|---------------------------------------|----------------------------------------------|
+| `memex search [query]`               | `memex_search` with optional query arg       |
+| `memex read <slug>`                   | `memex_read` with slug arg                   |
+| `memex write <slug>`                  | `memex_write` with slug arg and body         |
+| `memex links`                         | `memex_links` with no args                   |
+| `memex links <slug>`                  | `memex_links` with slug arg                  |
+| `memex archive <slug>`               | `memex_archive` with slug arg                |
+
+The rest of this skill uses CLI syntax for brevity. Substitute MCP tool calls if CLI is unavailable.
 
 ## Process
 

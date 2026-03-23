@@ -9,9 +9,15 @@ You have access to a Zettelkasten memory system via the `memex` CLI. After compl
 
 ## Tools Available
 
-- `memex search <query>` — search existing cards
-- `memex read <slug>` — read a card's full content
-- `memex write <slug>` — write a card (pipe content via stdin)
+Two equivalent interfaces exist — use whichever your environment supports:
+
+| CLI (Claude Code with memex in PATH) | MCP tool (VSCode / Cursor / any MCP client) |
+|---------------------------------------|----------------------------------------------|
+| `memex search <query>`               | `memex_search` with query arg                |
+| `memex read <slug>`                   | `memex_read` with slug arg                   |
+| `memex write <slug>`                  | `memex_write` with slug arg and body         |
+
+The rest of this skill uses CLI syntax for brevity. Substitute MCP tool calls if CLI is unavailable.
 
 ## Process
 
