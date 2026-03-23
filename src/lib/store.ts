@@ -69,6 +69,16 @@ export class CardStore {
     return results;
   }
 
+  /**
+   * Recursively scan all .md files under a given root directory.
+   * Unlike scanAll(), this is not cached and searches beyond cardsDir.
+   */
+  async scanAllRecursive(rootDir: string): Promise<ScannedCard[]> {
+    const results: ScannedCard[] = [];
+    await this.walkDir(rootDir, results);
+    return results;
+  }
+
   private async walkDir(dir: string, results: ScannedCard[]): Promise<void> {
     let entries;
     try {

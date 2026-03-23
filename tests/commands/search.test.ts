@@ -106,4 +106,52 @@ When JWT revoke fails, use cache as fallback. See [[jwt-migration]].`
     const result = await searchCommand(store, "jwt");
     expect(result.output).toContain("## jwt-migration");
   });
+
+  it("searches recursively in directories beyond cards/", async () => {
+    // Create a projects/ directory alongside cards/
+    const projectsDir = join(tmpDir, "projects");
+    await mkdir(projectsDir, { recursive: true });
+    await writeFile(
+      join(projectsDir, "api-design.md"),
+      `---
+title: API Design
+created: 2026-03-23
+modified: 2026-03-23
+source: project
+---
+
+This project uses JWT authentication for API endpoints.`
+    );
+
+    // Search should find the JWT match in projects/ directory
+    const result = await searchCommand(store, "JWT");
+    expect(result.output).toContain("api-design");
+    expect(result.output).toContain("API Design");
+
+    // Should also still find cards/ directory results
+    expect(result.output).toContain("jwt-migration");
+  });
+
+  it("does not list files from other directories when no query", async () => {
+    // Create a projects/ directory alongside cards/
+    const projectsDir = join(tmpDir, "projects");
+    await mkdir(projectsDir, { recursive: true });
+    await writeFile(
+      join(projectsDir, "api-design.md"),
+      `---
+title: API Design
+created: 2026-03-23
+modified: 2026-03-23
+source: project
+---
+
+Some project content.`
+    );
+
+    // List (no query) should only show cards/ directory
+    const result = await searchCommand(store, undefined);
+    expect(result.output).toContain("jwt-migration");
+    expect(result.output).toContain("caching");
+    expect(result.output).not.toContain("api-design");
+  });
 });
