@@ -131,6 +131,19 @@ export class GitAdapter implements SyncAdapter {
       await execFile("git", ["init", this.home]);
     }
 
+    // Ensure .gitignore exists with local-only files
+    const gitignorePath = join(this.home, ".gitignore");
+    const ignoreEntries = [".sync.json", ".last-organize"];
+    try {
+      const existing = await readFile(gitignorePath, "utf-8");
+      const missing = ignoreEntries.filter((e) => !existing.includes(e));
+      if (missing.length > 0) {
+        await writeFile(gitignorePath, existing.trimEnd() + "\n" + missing.join("\n") + "\n", "utf-8");
+      }
+    } catch {
+      await writeFile(gitignorePath, ignoreEntries.join("\n") + "\n", "utf-8");
+    }
+
     // Set remote
     try {
       await execFile("git", ["-C", this.home, "remote", "add", "origin", url]);
