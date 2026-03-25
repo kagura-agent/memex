@@ -91,6 +91,7 @@ export class CardStore {
           ? join(dir, entry.name)
               .replace(this.cardsDir + sep, "")
               .replace(/\.md$/, "")
+              .replace(/\\/g, "/")
           : basename(entry.name, ".md");
 
         results.push({
@@ -103,7 +104,8 @@ export class CardStore {
 
   async resolve(slug: string): Promise<string | null> {
     const cards = await this.scanAll();
-    const found = cards.find((c) => c.slug === slug);
+    const normalised = slug.replace(/\\/g, "/");
+    const found = cards.find((c) => c.slug === normalised);
     return found?.path ?? null;
   }
 
