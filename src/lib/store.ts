@@ -21,7 +21,7 @@ export function validateSlug(slug: string): void {
   }
 
   // Reject slugs that are only dots and/or slashes (e.g. "..", "./.", "///")
-  if (/^[./]+$/.test(trimmed)) {
+  if (/^[./\\]+$/.test(trimmed)) {
     throw new Error("Invalid slug: must not consist only of dots and slashes");
   }
 
@@ -30,12 +30,17 @@ export function validateSlug(slug: string): void {
   }
 
   // Reject leading/trailing slashes or consecutive slashes (empty path segments)
-  if (trimmed.startsWith("/") || trimmed.endsWith("/") || trimmed.includes("//")) {
+  // Check both Unix (/) and Windows (\) separators
+  if (
+    trimmed.startsWith("/") || trimmed.startsWith("\\") ||
+    trimmed.endsWith("/") || trimmed.endsWith("\\") ||
+    trimmed.includes("//") || trimmed.includes("\\\\")
+  ) {
     throw new Error("Invalid slug: must not contain empty path segments");
   }
 
   // Reject path segments that are just dots (e.g. "a/../b", "./foo")
-  const segments = trimmed.split("/");
+  const segments = trimmed.split(/[/\\]/);
   for (const seg of segments) {
     if (seg === "." || seg === "..") {
       throw new Error("Invalid slug: path segments must not be '.' or '..'");
