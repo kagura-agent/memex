@@ -19,6 +19,7 @@ import { syncCommand } from "./commands/sync.js";
 import { importCommand } from "./commands/import.js";
 import { doctorCommand } from "./commands/doctor.js";
 import { migrateCommand } from "./commands/migrate.js";
+import { backlinksCommand } from "./commands/backlinks.js";
 
 async function getStore(opts?: { nested?: boolean }): Promise<CardStore> {
   const home = process.env.MEMEX_HOME || join(homedir(), ".memex");
@@ -87,6 +88,20 @@ program
   .action(async (slug?: string) => {
     const store = await getStore();
     const result = await linksCommand(store, slug);
+    if (result.output) process.stdout.write(result.output + "\n");
+    process.exit(result.exitCode);
+  });
+
+program
+  .command("backlinks <slug>")
+  .description("Show all cards that link to <slug> via [[wiki-links]]")
+  .option("--nested", "Use nested (path-preserving) slugs for this command")
+  .option("--all", "Search across all configured searchDirs in addition to cards/")
+  .action(async (slug: string, opts: { nested?: boolean; all?: boolean }) => {
+    const home = process.env.MEMEX_HOME || join(homedir(), ".memex");
+    const config = await readConfig(home);
+    const store = await getStore({ nested: opts.nested });
+    const result = await backlinksCommand(store, slug, { all: opts.all, config, memexHome: home });
     if (result.output) process.stdout.write(result.output + "\n");
     process.exit(result.exitCode);
   });
