@@ -1,7 +1,7 @@
 {
   "name": "@touchskyer/memex",
   "mcpName": "io.github.iamtouchskyer/memex",
-  "version": "0.1.26",
+  "version": "0.1.27",
   "description": "Zettelkasten-based agent memory system with bidirectional links",
   "type": "module",
   "bin": {
@@ -33,7 +33,9 @@
     "pi-package"
   ],
   "pi": {
-    "extensions": ["pi-extension"]
+    "extensions": [
+      "pi-extension"
+    ]
   },
   "license": "MIT",
   "repository": {
