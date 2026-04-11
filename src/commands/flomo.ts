@@ -193,7 +193,7 @@ export function parseFlomoHtml(html: string): FlomoMemo[] {
     const timestamp = timeMatch ? timeMatch[1].trim() : "";
 
     // Extract content div
-    const contentMatch = block.match(/<div\s+class="content">([\s\S]*?)<\/div>\s*(?:<div\s+class="files">|$)/);
+    const contentMatch = block.match(/<div\s+class="content">([\s\S]*?)<\/div>\s*(?:<div\s+class="files"[^>]*>|$)/);
     const rawContent = contentMatch ? contentMatch[1] : "";
 
     // Convert HTML content to markdown
@@ -207,8 +207,8 @@ export function parseFlomoHtml(html: string): FlomoMemo[] {
     const firstLine = markdown.split("\n").find(l => l.trim().length > 0) || "Untitled";
     const title = firstLine.length > 60 ? firstLine.slice(0, 57) + "..." : firstLine;
 
-    // Generate slug from content
-    const slug = generateSlug(title);
+    // Generate slug from content (pass index to disambiguate all-Chinese memos)
+    const slug = generateSlug(title, i);
 
     memos.push({ timestamp, content: markdown, tags, slug, title });
   }
@@ -256,7 +256,7 @@ function htmlToMarkdown(html: string): string {
   return md;
 }
 
-function generateSlug(text: string): string {
+function generateSlug(text: string, index?: number): string {
   // Remove markdown formatting
   let slug = text.replace(/[*_#\[\]()]/g, "");
   // Remove Chinese characters for slug, keep alphanumeric
@@ -265,7 +265,11 @@ function generateSlug(text: string): string {
   slug = slug.trim().toLowerCase().replace(/\s+/g, "-").replace(/-+/g, "-");
   // Limit length
   slug = slug.slice(0, 60).replace(/-$/, "");
-  return slug || "flomo-memo";
+  // Fallback: if slug is empty (all-Chinese content), use flomo-memo with index
+  if (!slug) {
+    slug = index !== undefined ? `flomo-memo-${index}` : "flomo-memo";
+  }
+  return slug;
 }
 
 export async function flomoImportCommand(
@@ -324,7 +328,7 @@ export async function flomoImportCommand(
     }
 
     const cardContent = stringifyFrontmatter(
-      opts.raw ? memo.content : memo.content,
+      memo.content,
       data,
     );
     await store.writeCard(slug, cardContent);

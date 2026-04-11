@@ -74,10 +74,39 @@ describe("parseFlomoHtml", () => {
   });
 
   it("handles HTML entities", () => {
-    const html = `<div class="memos"><div class="memo"><div class="time">2024-01-01 00:00:00</div><div class="content"><p>A &amp; B &lt; C</p></div><div class="files"></div></div></div>`;
+    const html = `<div class="memos"><div class="memo"><div class="time">2024-01-01 00:00:00</div><div class="content"><p>A &amp; B &lt; C &gt; D &quot;E&quot; &#39;F&#39; G&nbsp;H</p></div><div class="files"></div></div></div>`;
     const memos = parseFlomoHtml(html);
     expect(memos.length).toBe(1);
-    expect(memos[0].content).toContain("A & B < C");
+    expect(memos[0].content).toContain("A & B < C > D");
+    expect(memos[0].content).toContain('"E"');
+    expect(memos[0].content).toContain("'F'");
+    expect(memos[0].content).toContain("G H");
+  });
+
+  it("generates unique slugs for all-Chinese memos", () => {
+    const html = `<div class="memos">
+<div class="memo"><div class="time">2024-01-01 00:00:00</div><div class="content"><p>全中文内容一</p></div><div class="files"></div></div>
+<div class="memo"><div class="time">2024-01-02 00:00:00</div><div class="content"><p>全中文内容二</p></div><div class="files"></div></div>
+<div class="memo"><div class="time">2024-01-03 00:00:00</div><div class="content"><p>全中文内容三</p></div><div class="files"></div></div>
+</div>`;
+    const memos = parseFlomoHtml(html);
+    expect(memos.length).toBe(3);
+    // Each should have a unique slug
+    const slugs = memos.map(m => m.slug);
+    const uniqueSlugs = new Set(slugs);
+    expect(uniqueSlugs.size).toBe(3);
+    // Slugs should be like flomo-memo-1, flomo-memo-2, flomo-memo-3
+    for (const slug of slugs) {
+      expect(slug).toMatch(/^flomo-memo-\d+$/);
+    }
+  });
+
+  it("converts HTML br tags and links", () => {
+    const html = `<div class="memos"><div class="memo"><div class="time">2024-01-01 00:00:00</div><div class="content"><p>Line one<br/>Line two</p><p>Visit <a href="https://example.com">here</a></p></div><div class="files"></div></div></div>`;
+    const memos = parseFlomoHtml(html);
+    expect(memos.length).toBe(1);
+    expect(memos[0].content).toContain("Line one\nLine two");
+    expect(memos[0].content).toContain("[here](https://example.com)");
   });
 });
 
