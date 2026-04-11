@@ -20,6 +20,7 @@ import { importCommand } from "./commands/import.js";
 import { doctorCommand } from "./commands/doctor.js";
 import { migrateCommand } from "./commands/migrate.js";
 import { backlinksCommand } from "./commands/backlinks.js";
+import { flomoConfigCommand, flomoPushCommand } from "./commands/flomo.js";
 
 async function getStore(opts?: { nested?: boolean }): Promise<CardStore> {
   const home = process.env.MEMEX_HOME || join(homedir(), ".memex");
@@ -262,6 +263,41 @@ program
       process.stderr.write("No migration specified. Use --enable-nested to enable nestedSlugs.\n");
       process.exit(1);
     }
+  });
+
+const flomo = program
+  .command("flomo")
+  .description("Flomo integration (push/import/config)");
+
+flomo
+  .command("config")
+  .description("Configure flomo webhook URL")
+  .option("--set-webhook <url>", "Set the flomo webhook URL")
+  .option("--show", "Show current configuration")
+  .action(async (opts: { setWebhook?: string; show?: boolean }) => {
+    const home = process.env.MEMEX_HOME || join(homedir(), ".memex");
+    const result = await flomoConfigCommand(home, opts);
+    process.stdout.write(result.output + "\n");
+    process.exit(result.exitCode);
+  });
+
+flomo
+  .command("push [slug]")
+  .description("Push card(s) to flomo")
+  .option("--all", "Push all matching cards")
+  .option("--source <value>", "Filter by source")
+  .option("--tag <value>", "Filter by tag or category")
+  .option("--dry-run", "Preview without pushing")
+  .action(async (slug: string | undefined, opts: { all?: boolean; source?: string; tag?: string; dryRun?: boolean }) => {
+    if (!slug && !opts.all && !opts.source && !opts.tag) {
+      process.stderr.write("Error: specify a slug or use --all/--source/--tag to filter.\n");
+      process.exit(1);
+    }
+    const home = process.env.MEMEX_HOME || join(homedir(), ".memex");
+    const store = await getStore();
+    const result = await flomoPushCommand(store, home, slug, opts);
+    process.stdout.write(result.output + "\n");
+    process.exit(result.exitCode);
   });
 
 program.parse();
