@@ -1,12 +1,13 @@
 {
-  "tick": 3,
-  "unit": "F2.1",
-  "description": "Digested 20 memos into 5 atomic cards. Skipped 15 memos (industry gossip, dated predictions, personal reflections better suited for blog).",
+  "tick": 4,
+  "unit": "F2.2",
+  "description": "2 independent reviews (curator ITERATE + DA ITERATE). Fixed 2 red + 3 yellow issues. Cards now have time anchors, softened claims, and mesh cross-links.",
   "status": "completed",
   "artifacts": [
-    ".harness/nodes/F2.1/run_1/eval.md"
+    ".harness/nodes/F2.2/run_1/eval-curator.md",
+    ".harness/nodes/F2.2/run_1/eval-da.md"
   ],
-  "next_unit": "F2.2",
+  "next_unit": "F3.1",
   "blockers": [],
   "review_of_previous": "",
   "plan_file": ".harness/plan.md",
@@ -37,8 +38,8 @@
   ],
   "_written_by": "opc-harness",
   "_plan_hash": "20c58620f144bc27",
-  "_last_modified": "2026-04-12T11:36:05.896Z",
-  "_git_head": "2322415614bdfed0e9075c64e66b77e401b98dfa",
+  "_last_modified": "2026-04-12T11:40:06.650Z",
+  "_git_head": "5bff4d77ea43678ad9a0836a5729dd6f407ad5ee",
   "_tick_history": [
     {
       "unit": "F1.1",
@@ -54,6 +55,11 @@
       "unit": "F2.1",
       "tick": 3,
       "status": "completed"
+    },
+    {
+      "unit": "F2.2",
+      "tick": 4,
+      "status": "completed"
     }
   ],
   "_max_total_ticks": 66,
@@ -67,7 +73,7 @@
     "typecheck_script": false
   },
   "_last_review_evals": {
-    ".harness/nodes/F1.2/run_1/eval.md": "46efc18dcc42ced9",
-    ".harness/nodes/F1.2/run_1/eval-da.md": "3cbcfa159aeaf33e"
+    ".harness/nodes/F2.2/run_1/eval-curator.md": "de5b64de4e46a644",
+    ".harness/nodes/F2.2/run_1/eval-da.md": "f5e982717c8d2623"
   }
 }
