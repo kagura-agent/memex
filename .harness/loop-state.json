@@ -1,13 +1,12 @@
 {
-  "tick": 10,
-  "unit": "F5.2",
-  "description": "Curator PASS, DA PASS. 1 card quality validated, 96% skip justified.",
+  "tick": 11,
+  "unit": "F6.1",
+  "description": "3 cards from 54 memos (94% skip)",
   "status": "completed",
   "artifacts": [
-    ".harness/nodes/F5.2/run_1/eval-curator.md",
-    ".harness/nodes/F5.2/run_1/eval-da.md"
+    ".harness/nodes/F6.1/run_1/eval.md"
   ],
-  "next_unit": "F6.1",
+  "next_unit": "F6.2",
   "blockers": [],
   "review_of_previous": "",
   "plan_file": ".harness/plan.md",
@@ -38,8 +37,8 @@
   ],
   "_written_by": "opc-harness",
   "_plan_hash": "20c58620f144bc27",
-  "_last_modified": "2026-04-12T11:59:06.252Z",
-  "_git_head": "1eb616da32e39cf7d40e9b66ed7a351b8dd952a3",
+  "_last_modified": "2026-04-12T12:01:15.078Z",
+  "_git_head": "29445a9b8838f48f1143867800c548a996b0d622",
   "_tick_history": [
     {
       "unit": "F1.1",
@@ -89,6 +88,11 @@
     {
       "unit": "F5.2",
       "tick": 10,
+      "status": "completed"
+    },
+    {
+      "unit": "F6.1",
+      "tick": 11,
       "status": "completed"
     }
   ],
