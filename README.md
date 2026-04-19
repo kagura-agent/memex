@@ -319,6 +319,12 @@ Instalación completa, no se requiere configuración adicional. Las descripcione
 
 ---
 
+## Community
+
+Using memex? Share your setup in [Discussions → Show and tell](https://github.com/iamtouchskyer/memex/discussions/categories/show-and-tell). Questions go in [Q&A](https://github.com/iamtouchskyer/memex/discussions/categories/q-a). Feature ideas in [Ideas](https://github.com/iamtouchskyer/memex/discussions/categories/ideas).
+
+---
+
 ## License
 
 MIT
