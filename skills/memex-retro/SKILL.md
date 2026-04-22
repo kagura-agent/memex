@@ -10,15 +10,31 @@ You have access to a Zettelkasten memory system via the `memex` CLI. After compl
 
 ## Tools Available
 
-Two equivalent interfaces exist — use whichever your environment supports:
+Three equivalent interfaces — use whichever your environment supports:
 
-| CLI (Claude Code with memex in PATH) | MCP tool (VSCode / Cursor / any MCP client) |
-|---------------------------------------|----------------------------------------------|
-| `memex search <query>`               | `memex_search` with query arg                |
-| `memex read <slug>`                   | `memex_read` with slug arg                   |
-| `memex write <slug>`                  | `memex_write` with slug arg and body         |
+| CLI (memex in PATH) | Plugin CLI fallback (Claude Code) | MCP tool (VSCode / Cursor) |
+|----------------------|-----------------------------------|----------------------------|
+| `memex search <q>`  | `node ~/.claude/plugins/cache/cc-plugins/memex/*/dist/cli.js search <q>` | `memex_search` with query arg |
+| `memex read <slug>`  | `node ~/.claude/plugins/cache/cc-plugins/memex/*/dist/cli.js read <slug>` | `memex_read` with slug arg |
+| `memex write <slug>` | `node ~/.claude/plugins/cache/cc-plugins/memex/*/dist/cli.js write <slug>` | `memex_write` with slug arg and body |
 
-The rest of this skill uses CLI syntax for brevity. Substitute MCP tool calls if CLI is unavailable.
+**Resolution order:** Try `memex` in PATH first. If not found, define a shell function and use it:
+
+```bash
+# Define once per session — DO NOT use variable assignment ($VAR won't expand correctly in zsh)
+memex() { node "$HOME/.claude/plugins/cache/cc-plugins/memex/0.1.29/dist/cli.js" "$@"; }
+
+# Then use normally
+memex search "some query"
+memex read some-slug
+memex write some-slug << 'EOF'
+card content here
+EOF
+```
+
+If both CLI approaches fail, use MCP tools (`memex_search`, `memex_read`, `memex_write`).
+
+The rest of this skill uses `memex` CLI syntax for brevity.
 
 ## Process
 
