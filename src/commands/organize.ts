@@ -90,6 +90,29 @@ export async function organizeCommand(
     );
   }
 
+  // Lifecycle summary
+  const lifecycleCounts: Record<string, number> = { active: 0, draft: 0, stale: 0, archived: 0, untracked: 0 };
+  for (const card of cards) {
+    const info = cardData.get(card.slug);
+    if (info && info.status && lifecycleCounts[info.status] !== undefined) {
+      lifecycleCounts[info.status]++;
+    } else {
+      lifecycleCounts.untracked++;
+    }
+  }
+  const hasLifecycle = cards.length - lifecycleCounts.untracked;
+  if (hasLifecycle > 0) {
+    sections.push(
+      "## Lifecycle Summary\n" +
+      `- Active: ${lifecycleCounts.active}\n` +
+      `- Draft: ${lifecycleCounts.draft}\n` +
+      `- Stale: ${lifecycleCounts.stale}\n` +
+      `- Archived: ${lifecycleCounts.archived}\n` +
+      `- Untracked: ${lifecycleCounts.untracked}\n` +
+      `- Total: ${cards.length}`,
+    );
+  }
+
   // Recently modified cards + neighbors
   const recentCards: string[] = [];
   if (lastOrganize) {

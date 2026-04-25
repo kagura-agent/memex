@@ -26,6 +26,35 @@ export function stringifyFrontmatter(
   const yamlLines: string[] = [];
   for (const [key, value] of Object.entries(data)) {
     if (value === undefined || value === null) continue;
+
+    // Handle arrays (e.g. tags: [a, b, c])
+    if (Array.isArray(value)) {
+      const items = value.map((v) => {
+        const s = String(v).trim();
+        return /[:#{}[\],&*?|>!%@`'\s]/.test(s) ? `'${s.replace(/'/g, "''")}'` : s;
+      });
+      yamlLines.push(`${key}: [${items.join(", ")}]`);
+      continue;
+    }
+
+    // Handle numbers (evidence_count, confidence) — preserve as numeric
+    if (typeof value === "number") {
+      yamlLines.push(`${key}: ${value}`);
+      continue;
+    }
+
+    // Handle Date objects — serialize as YYYY-MM-DD
+    if (value instanceof Date) {
+      yamlLines.push(`${key}: ${value.toISOString().split("T")[0]}`);
+      continue;
+    }
+
+    // Handle booleans
+    if (typeof value === "boolean") {
+      yamlLines.push(`${key}: ${value}`);
+      continue;
+    }
+
     const str = String(value).replace(/\n/g, " ").trim();
     if (str === "" || /[:#{}[\],&*?|>!%@`']/.test(str)) {
       yamlLines.push(`${key}: '${str.replace(/'/g, "''")}'`);

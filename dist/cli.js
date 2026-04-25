@@ -7159,6 +7159,26 @@ function stringifyFrontmatter(content, data) {
   const yamlLines = [];
   for (const [key, value] of Object.entries(data)) {
     if (value === void 0 || value === null) continue;
+    if (Array.isArray(value)) {
+      const items = value.map((v) => {
+        const s = String(v).trim();
+        return /[:#{}[\],&*?|>!%@`'\s]/.test(s) ? `'${s.replace(/'/g, "''")}'` : s;
+      });
+      yamlLines.push(`${key}: [${items.join(", ")}]`);
+      continue;
+    }
+    if (typeof value === "number") {
+      yamlLines.push(`${key}: ${value}`);
+      continue;
+    }
+    if (value instanceof Date) {
+      yamlLines.push(`${key}: ${value.toISOString().split("T")[0]}`);
+      continue;
+    }
+    if (typeof value === "boolean") {
+      yamlLines.push(`${key}: ${value}`);
+      continue;
+    }
     const str2 = String(value).replace(/\n/g, " ").trim();
     if (str2 === "" || /[:#{}[\],&*?|>!%@`']/.test(str2)) {
       yamlLines.push(`${key}: '${str2.replace(/'/g, "''")}'`);
@@ -7378,6 +7398,7 @@ var init_sync = __esm({
         }
         try {
           await execFile("git", ["-C", this.home, "fetch", "origin"]);
+          await this.normalizeBranch();
           try {
             const remoteBranch = await detectRemoteBranch(this.home);
             await execFile("git", [
@@ -7398,6 +7419,42 @@ var init_sync = __esm({
           adapter: "git",
           auto: false
         });
+      }
+      /**
+       * Rename the local branch to match the remote's default branch,
+       * or fall back to "main" if the remote is empty.
+       */
+      async normalizeBranch() {
+        let target = "main";
+        try {
+          const { stdout } = await execFile("git", [
+            "-C",
+            this.home,
+            "ls-remote",
+            "--symref",
+            "origin",
+            "HEAD"
+          ]);
+          const match = stdout.match(/ref: refs\/heads\/(\S+)\s/);
+          if (match) {
+            target = match[1];
+          }
+        } catch {
+        }
+        try {
+          const { stdout } = await execFile("git", [
+            "-C",
+            this.home,
+            "rev-parse",
+            "--abbrev-ref",
+            "HEAD"
+          ]);
+          const current = stdout.trim();
+          if (current && current !== target) {
+            await execFile("git", ["-C", this.home, "branch", "-M", target]);
+          }
+        } catch {
+        }
       }
       async pull() {
         const config2 = await readSyncConfig(this.home);
@@ -8374,6 +8431,27 @@ async function organizeCommand(store, lastOrganize) {
       "## Unresolved Conflicts\n" + conflicts.map((slug) => `- ${slug} \u2014 ${cardData.get(slug)?.title}`).join("\n")
     );
   }
+  const lifecycleCounts = { active: 0, draft: 0, stale: 0, archived: 0, untracked: 0 };
+  for (const card of cards) {
+    const info = cardData.get(card.slug);
+    if (info && info.status && lifecycleCounts[info.status] !== void 0) {
+      lifecycleCounts[info.status]++;
+    } else {
+      lifecycleCounts.untracked++;
+    }
+  }
+  const hasLifecycle = cards.length - lifecycleCounts.untracked;
+  if (hasLifecycle > 0) {
+    sections.push(
+      `## Lifecycle Summary
+- Active: ${lifecycleCounts.active}
+- Draft: ${lifecycleCounts.draft}
+- Stale: ${lifecycleCounts.stale}
+- Archived: ${lifecycleCounts.archived}
+- Untracked: ${lifecycleCounts.untracked}
+- Total: ${cards.length}`
+    );
+  }
   const recentCards = [];
   if (lastOrganize) {
     for (const card of cards) {
@@ -8433,7 +8511,7 @@ var init_organize = __esm({
 
 // src/commands/flomo.ts
 import { readFile as readFile8, writeFile as writeFile5 } from "node:fs/promises";
-import { join as join11, dirname as dirname8 } from "node:path";
+import { join as join11, dirname as dirname9 } from "node:path";
 function isValidFlomoWebhookUrl(url2) {
   try {
     const parsed = new URL(url2);
@@ -8654,7 +8732,7 @@ async function flomoImportCommand(store, filePath, opts) {
     created++;
   }
   if (!opts.dryRun && created > 0) {
-    await autoSync(dirname8(store.cardsDir));
+    await autoSync(dirname9(store.cardsDir));
   }
   lines.push("");
   const prefix = opts.dryRun ? "[dry-run] " : "";
@@ -8705,7 +8783,7 @@ async function flomoPushCommand(store, memexHome, slugOrOpts, opts) {
     results.push(result);
   }
   if (!dryRun && results.some((r) => r.status === "pushed")) {
-    await autoSync(dirname8(store.cardsDir));
+    await autoSync(dirname9(store.cardsDir));
   }
   const pushed = results.filter((r) => r.status === "pushed").length;
   const skipped = results.filter((r) => r.status === "skipped").length;
@@ -39968,7 +40046,7 @@ __export(server_exports, {
   createMemexServer: () => createMemexServer
 });
 import { readFileSync } from "node:fs";
-import { join as join12, dirname as dirname9 } from "node:path";
+import { join as join12, dirname as dirname10 } from "node:path";
 import { fileURLToPath as fileURLToPath2 } from "node:url";
 function createMemexServer(store, home) {
   const server = new McpServer({
@@ -40078,7 +40156,7 @@ var init_server3 = __esm({
     init_sync();
     init_operations();
     init_zod();
-    __dirname2 = dirname9(fileURLToPath2(import.meta.url));
+    __dirname2 = dirname10(fileURLToPath2(import.meta.url));
     pkg = JSON.parse(readFileSync(join12(__dirname2, "..", "..", "package.json"), "utf-8"));
   }
 });
@@ -40214,7 +40292,7 @@ init_read();
 init_search();
 init_links();
 init_archive();
-import { join as join13, dirname as dirname10 } from "node:path";
+import { join as join13, dirname as dirname11 } from "node:path";
 import { readFileSync as readFileSync2 } from "node:fs";
 import { fileURLToPath as fileURLToPath3 } from "node:url";
 
@@ -40275,7 +40353,7 @@ async function serveCommand(port) {
     console.log(`Opening ${MEMRA_URL}...`);
     if (!process.env.MEMEX_NO_OPEN) {
       const bin = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
-      execFile2(bin, [MEMRA_URL], () => {
+      execFile2(bin, [MEMRA_URL], { shell: process.platform === "win32" }, () => {
       });
     }
     return null;
@@ -40420,7 +40498,7 @@ window.createShareCard = createShareCard;
         console.log("\u{1F4A1} Tip: Run 'memex sync --init' to sync and access your cards online");
         if (!process.env.MEMEX_NO_OPEN) {
           const bin = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
-          execFile2(bin, [url2], () => {
+          execFile2(bin, [url2], { shell: process.platform === "win32" }, () => {
           });
         }
         resolvePromise(server);
@@ -40793,8 +40871,170 @@ ${lines.join("\n")}`;
 
 // src/cli.ts
 init_organize();
+
+// src/commands/lifecycle.ts
+init_parser();
+init_sync();
+import { dirname as dirname8 } from "node:path";
+var STALE_DAYS = 30;
+var ARCHIVE_DAYS = 90;
+var AUTO_PROMOTE_EVIDENCE = 3;
+function extractLifecycle(data) {
+  return {
+    evidence_count: typeof data.evidence_count === "number" ? data.evidence_count : 0,
+    last_reinforced: typeof data.last_reinforced === "string" ? data.last_reinforced : data.last_reinforced instanceof Date ? data.last_reinforced.toISOString().split("T")[0] : null,
+    confidence: typeof data.confidence === "number" ? data.confidence : 0,
+    status: typeof data.status === "string" ? data.status : ""
+  };
+}
+function daysBetween(dateStr, now) {
+  const d = /* @__PURE__ */ new Date(dateStr + "T00:00:00Z");
+  return Math.floor((now.getTime() - d.getTime()) / (1e3 * 60 * 60 * 24));
+}
+function computeExpectedStatus(lc, created, now) {
+  const current = lc.status;
+  if (current === "archived") return "archived";
+  const refDate = lc.last_reinforced || created;
+  const daysSinceRef = refDate ? daysBetween(refDate, now) : Infinity;
+  if (current === "stale" && daysSinceRef >= STALE_DAYS + ARCHIVE_DAYS && lc.confidence < 0.5) {
+    return "archived";
+  }
+  if (daysSinceRef >= STALE_DAYS && current !== "draft") {
+    if (lc.evidence_count >= AUTO_PROMOTE_EVIDENCE) {
+      return "active";
+    }
+    return "stale";
+  }
+  if (lc.evidence_count >= AUTO_PROMOTE_EVIDENCE) {
+    return "active";
+  }
+  return current || "draft";
+}
+async function lifecycleAuditCommand(store) {
+  const cards = await store.scanAll();
+  if (cards.length === 0) return { output: "No cards.", exitCode: 0 };
+  const now = /* @__PURE__ */ new Date();
+  const statusCounts = { active: 0, draft: 0, stale: 0, archived: 0, untracked: 0 };
+  const needsAttention = [];
+  const recentlyReinforced = [];
+  for (const card of cards) {
+    const raw = await store.readCard(card.slug);
+    const { data } = parseFrontmatter(raw);
+    const lc = extractLifecycle(data);
+    const created = data.created instanceof Date ? data.created.toISOString().split("T")[0] : typeof data.created === "string" ? data.created : null;
+    if (lc.status && statusCounts[lc.status] !== void 0) {
+      statusCounts[lc.status]++;
+    } else {
+      statusCounts.untracked++;
+    }
+    const expected = computeExpectedStatus(lc, created, now);
+    if (expected !== (lc.status || "draft") && lc.status !== "") {
+      let reason = "";
+      if (expected === "stale") reason = `no reinforcement in ${STALE_DAYS}+ days`;
+      else if (expected === "active") reason = `evidence_count >= ${AUTO_PROMOTE_EVIDENCE}`;
+      else if (expected === "archived") reason = "stale + 90d + low confidence";
+      needsAttention.push({ slug: card.slug, current: lc.status || "(none)", suggested: expected, reason });
+    }
+    if (lc.last_reinforced) {
+      const days = daysBetween(lc.last_reinforced, now);
+      if (days <= 7) {
+        recentlyReinforced.push({ slug: card.slug, date: lc.last_reinforced, count: lc.evidence_count });
+      }
+    }
+  }
+  const sections = [];
+  sections.push("# Lifecycle Audit Report\n");
+  sections.push(
+    `## Status Distribution
+- Active: ${statusCounts.active}
+- Draft: ${statusCounts.draft}
+- Stale: ${statusCounts.stale}
+- Archived: ${statusCounts.archived}
+- Untracked (no lifecycle fields): ${statusCounts.untracked}
+- Total: ${cards.length}`
+  );
+  if (needsAttention.length > 0) {
+    sections.push(
+      `## Needs Attention (${needsAttention.length} cards)
+` + needsAttention.map(
+        (n) => `- **${n.slug}**: ${n.current} \u2192 ${n.suggested} (${n.reason})`
+      ).join("\n")
+    );
+  }
+  if (recentlyReinforced.length > 0) {
+    sections.push(
+      `## Recently Reinforced (last 7 days)
+` + recentlyReinforced.map(
+        (r) => `- ${r.slug}: ${r.date} (evidence: ${r.count})`
+      ).join("\n")
+    );
+  }
+  return { output: sections.join("\n\n"), exitCode: 0 };
+}
+async function lifecycleReinforceCommand(store, slug) {
+  let raw;
+  try {
+    raw = await store.readCard(slug);
+  } catch {
+    return { output: `Card not found: ${slug}`, exitCode: 1 };
+  }
+  const { data, content } = parseFrontmatter(raw);
+  const today = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
+  const count = (typeof data.evidence_count === "number" ? data.evidence_count : 0) + 1;
+  data.evidence_count = count;
+  data.last_reinforced = today;
+  data.modified = today;
+  if (count >= AUTO_PROMOTE_EVIDENCE && data.status !== "active") {
+    data.status = "active";
+  }
+  if (data.status === "stale") {
+    data.status = count >= AUTO_PROMOTE_EVIDENCE ? "active" : "draft";
+  }
+  const output = stringifyFrontmatter(content, data);
+  await store.writeCard(slug, output);
+  await autoSync(dirname8(store.cardsDir));
+  return {
+    output: `Reinforced ${slug}: evidence_count=${count}, last_reinforced=${today}` + (data.status ? `, status=${data.status}` : ""),
+    exitCode: 0
+  };
+}
+async function lifecycleInitCommand(store, opts) {
+  const cards = await store.scanAll();
+  const today = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
+  let updated = 0;
+  const changes = [];
+  for (const card of cards) {
+    const raw = await store.readCard(card.slug);
+    const { data, content } = parseFrontmatter(raw);
+    if (data.evidence_count !== void 0 && data.status !== void 0) continue;
+    if (data.evidence_count === void 0) data.evidence_count = 1;
+    if (data.last_reinforced === void 0) data.last_reinforced = data.modified || data.created || today;
+    if (data.confidence === void 0) data.confidence = 0.5;
+    if (data.status === void 0) data.status = "draft";
+    if (data.last_reinforced instanceof Date) {
+      data.last_reinforced = data.last_reinforced.toISOString().split("T")[0];
+    }
+    if (!opts.dryRun) {
+      const output = stringifyFrontmatter(content, data);
+      await store.writeCard(card.slug, output);
+    }
+    changes.push(`- ${card.slug}: initialized (evidence=1, status=draft)`);
+    updated++;
+  }
+  if (updated === 0) {
+    return { output: "All cards already have lifecycle fields.", exitCode: 0 };
+  }
+  const prefix = opts.dryRun ? "[DRY RUN] " : "";
+  return {
+    output: `${prefix}Initialized lifecycle fields on ${updated} cards:
+${changes.join("\n")}`,
+    exitCode: 0
+  };
+}
+
+// src/cli.ts
 init_flomo();
-var __dirname3 = dirname10(fileURLToPath3(import.meta.url));
+var __dirname3 = dirname11(fileURLToPath3(import.meta.url));
 var pkg2 = JSON.parse(readFileSync2(join13(__dirname3, "..", "package.json"), "utf-8"));
 async function getStore(opts) {
   const home = await resolveMemexHome();
@@ -40967,6 +41207,25 @@ program2.command("migrate").description("Migrate memex configuration").option("-
     process.stderr.write("No migration specified. Use --enable-nested to enable nestedSlugs.\n");
     exit(1);
   }
+});
+var lifecycle = program2.command("lifecycle").description("Card lifecycle management: audit, reinforce, init");
+lifecycle.command("audit").description("Scan all cards and report lifecycle status distribution").action(async () => {
+  const store = await getStore();
+  const result = await lifecycleAuditCommand(store);
+  if (result.output) process.stdout.write(result.output + "\n");
+  exit(result.exitCode);
+});
+lifecycle.command("reinforce <slug>").description("Reinforce a card: increment evidence_count, update last_reinforced").action(async (slug) => {
+  const store = await getStore();
+  const result = await lifecycleReinforceCommand(store, slug);
+  if (result.output) process.stdout.write(result.output + "\n");
+  exit(result.exitCode);
+});
+lifecycle.command("init").description("Initialize lifecycle fields on cards that lack them").option("--dry-run", "Preview without writing").action(async (opts) => {
+  const store = await getStore();
+  const result = await lifecycleInitCommand(store, opts);
+  if (result.output) process.stdout.write(result.output + "\n");
+  exit(result.exitCode);
 });
 var flomo = program2.command("flomo").description("Flomo integration (push/import/config)");
 flomo.command("config").description("Configure flomo webhook URL").option("--set-webhook <url>", "Set the flomo webhook URL").option("--show", "Show current configuration").action(async (opts) => {

@@ -20,6 +20,7 @@ import { doctorCommand } from "./commands/doctor.js";
 import { migrateCommand } from "./commands/migrate.js";
 import { backlinksCommand } from "./commands/backlinks.js";
 import { organizeCommand } from "./commands/organize.js";
+import { lifecycleAuditCommand, lifecycleReinforceCommand, lifecycleInitCommand } from "./commands/lifecycle.js";
 import { flomoConfigCommand, flomoPushCommand, flomoImportCommand } from "./commands/flomo.js";
 
 async function getStore(opts?: { nested?: boolean }): Promise<CardStore> {
@@ -286,6 +287,41 @@ program
       process.stderr.write("No migration specified. Use --enable-nested to enable nestedSlugs.\n");
       exit(1);
     }
+  });
+
+const lifecycle = program
+  .command("lifecycle")
+  .description("Card lifecycle management: audit, reinforce, init");
+
+lifecycle
+  .command("audit")
+  .description("Scan all cards and report lifecycle status distribution")
+  .action(async () => {
+    const store = await getStore();
+    const result = await lifecycleAuditCommand(store);
+    if (result.output) process.stdout.write(result.output + "\n");
+    exit(result.exitCode);
+  });
+
+lifecycle
+  .command("reinforce <slug>")
+  .description("Reinforce a card: increment evidence_count, update last_reinforced")
+  .action(async (slug: string) => {
+    const store = await getStore();
+    const result = await lifecycleReinforceCommand(store, slug);
+    if (result.output) process.stdout.write(result.output + "\n");
+    exit(result.exitCode);
+  });
+
+lifecycle
+  .command("init")
+  .description("Initialize lifecycle fields on cards that lack them")
+  .option("--dry-run", "Preview without writing")
+  .action(async (opts: { dryRun?: boolean }) => {
+    const store = await getStore();
+    const result = await lifecycleInitCommand(store, opts);
+    if (result.output) process.stdout.write(result.output + "\n");
+    exit(result.exitCode);
   });
 
 const flomo = program
