@@ -21,6 +21,7 @@ import { migrateCommand } from "./commands/migrate.js";
 import { backlinksCommand } from "./commands/backlinks.js";
 import { organizeCommand } from "./commands/organize.js";
 import { lifecycleAuditCommand, lifecycleReinforceCommand, lifecycleInitCommand } from "./commands/lifecycle.js";
+import { extractCommand } from "./commands/extract.js";
 import { flomoConfigCommand, flomoPushCommand, flomoImportCommand } from "./commands/flomo.js";
 
 async function getStore(opts?: { nested?: boolean }): Promise<CardStore> {
@@ -287,6 +288,35 @@ program
       process.stderr.write("No migration specified. Use --enable-nested to enable nestedSlugs.\n");
       exit(1);
     }
+  });
+
+program
+  .command("extract")
+  .description("Extract facts from a session transcript (stdin) and route to cards")
+  .option("--dry-run", "Preview without writing")
+  .option("--model <model>", "LLM model for extraction (default: gpt-4o-mini)")
+  .option("--file <path>", "Read transcript from file instead of stdin")
+  .action(async (opts: { dryRun?: boolean; model?: string; file?: string }) => {
+    const home = await resolveMemexHome();
+    const config = await readConfig(home);
+    const store = await getStore();
+
+    let transcript: string;
+    if (opts.file) {
+      const { readFile } = await import("node:fs/promises");
+      transcript = await readFile(opts.file, "utf-8");
+    } else {
+      transcript = await readStdin();
+    }
+
+    const result = await extractCommand(store, transcript, {
+      dryRun: opts.dryRun,
+      model: opts.model,
+      memexHome: home,
+      config,
+    });
+    if (result.output) process.stdout.write(result.output + "\n");
+    exit(result.exitCode);
   });
 
 const lifecycle = program

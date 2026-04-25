@@ -17,6 +17,8 @@ export interface MemexConfig {
   ollamaBaseUrl?: string;
   /** Local GGUF model path or HuggingFace URI for node-llama-cpp. */
   localModelPath?: string;
+  /** Shell command for LLM chat completions (e.g. "openclaw capability model run --gateway"). */
+  llmCommand?: string;
 }
 
 /**
@@ -40,6 +42,7 @@ export async function readConfig(memexHome: string): Promise<MemexConfig> {
       ollamaModel: typeof parsed.ollamaModel === "string" ? parsed.ollamaModel : undefined,
       ollamaBaseUrl: typeof parsed.ollamaBaseUrl === "string" ? parsed.ollamaBaseUrl : undefined,
       localModelPath: typeof parsed.localModelPath === "string" ? parsed.localModelPath : undefined,
+      llmCommand: typeof parsed.llmCommand === "string" ? parsed.llmCommand : undefined,
     };
   } catch {
     // File doesn't exist or invalid JSON - return defaults

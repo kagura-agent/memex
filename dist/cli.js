@@ -3608,7 +3608,8 @@ async function readConfig(memexHome) {
       embeddingProvider: isValidProvider(parsed.embeddingProvider) ? parsed.embeddingProvider : void 0,
       ollamaModel: typeof parsed.ollamaModel === "string" ? parsed.ollamaModel : void 0,
       ollamaBaseUrl: typeof parsed.ollamaBaseUrl === "string" ? parsed.ollamaBaseUrl : void 0,
-      localModelPath: typeof parsed.localModelPath === "string" ? parsed.localModelPath : void 0
+      localModelPath: typeof parsed.localModelPath === "string" ? parsed.localModelPath : void 0,
+      llmCommand: typeof parsed.llmCommand === "string" ? parsed.llmCommand : void 0
     };
   } catch {
     return {
@@ -8511,7 +8512,7 @@ var init_organize = __esm({
 
 // src/commands/flomo.ts
 import { readFile as readFile8, writeFile as writeFile5 } from "node:fs/promises";
-import { join as join11, dirname as dirname9 } from "node:path";
+import { join as join12, dirname as dirname10 } from "node:path";
 function isValidFlomoWebhookUrl(url2) {
   try {
     const parsed = new URL(url2);
@@ -8521,7 +8522,7 @@ function isValidFlomoWebhookUrl(url2) {
   }
 }
 async function readFlomoConfig(memexHome) {
-  const configPath = join11(memexHome, ".memexrc");
+  const configPath = join12(memexHome, ".memexrc");
   try {
     const content = await readFile8(configPath, "utf-8");
     const parsed = JSON.parse(content);
@@ -8536,7 +8537,7 @@ async function writeFlomoConfig(memexHome, webhookUrl) {
   if (!isValidFlomoWebhookUrl(webhookUrl)) {
     return { success: false, error: "Invalid flomo webhook URL. Must be https://flomoapp.com/iwh/..." };
   }
-  const configPath = join11(memexHome, ".memexrc");
+  const configPath = join12(memexHome, ".memexrc");
   let existing = {};
   try {
     const content = await readFile8(configPath, "utf-8");
@@ -8732,7 +8733,7 @@ async function flomoImportCommand(store, filePath, opts) {
     created++;
   }
   if (!opts.dryRun && created > 0) {
-    await autoSync(dirname9(store.cardsDir));
+    await autoSync(dirname10(store.cardsDir));
   }
   lines.push("");
   const prefix = opts.dryRun ? "[dry-run] " : "";
@@ -8783,7 +8784,7 @@ async function flomoPushCommand(store, memexHome, slugOrOpts, opts) {
     results.push(result);
   }
   if (!dryRun && results.some((r) => r.status === "pushed")) {
-    await autoSync(dirname9(store.cardsDir));
+    await autoSync(dirname10(store.cardsDir));
   }
   const pushed = results.filter((r) => r.status === "pushed").length;
   const skipped = results.filter((r) => r.status === "skipped").length;
@@ -40046,7 +40047,7 @@ __export(server_exports, {
   createMemexServer: () => createMemexServer
 });
 import { readFileSync } from "node:fs";
-import { join as join12, dirname as dirname10 } from "node:path";
+import { join as join13, dirname as dirname11 } from "node:path";
 import { fileURLToPath as fileURLToPath2 } from "node:url";
 function createMemexServer(store, home) {
   const server = new McpServer({
@@ -40156,8 +40157,8 @@ var init_server3 = __esm({
     init_sync();
     init_operations();
     init_zod();
-    __dirname2 = dirname10(fileURLToPath2(import.meta.url));
-    pkg = JSON.parse(readFileSync(join12(__dirname2, "..", "..", "package.json"), "utf-8"));
+    __dirname2 = dirname11(fileURLToPath2(import.meta.url));
+    pkg = JSON.parse(readFileSync(join13(__dirname2, "..", "..", "package.json"), "utf-8"));
   }
 });
 
@@ -40292,7 +40293,7 @@ init_read();
 init_search();
 init_links();
 init_archive();
-import { join as join13, dirname as dirname11 } from "node:path";
+import { join as join14, dirname as dirname12 } from "node:path";
 import { readFileSync as readFileSync2 } from "node:fs";
 import { fileURLToPath as fileURLToPath3 } from "node:url";
 
@@ -41032,16 +41033,310 @@ ${changes.join("\n")}`,
   };
 }
 
+// src/commands/extract.ts
+init_parser();
+
+// src/lib/llm.ts
+import { request as httpsRequest2 } from "node:https";
+import { request as httpRequest2 } from "node:http";
+var DEFAULT_MODEL = "gpt-4o-mini";
+async function chatCompletion(messages, config2, options2) {
+  const url2 = config2.baseUrl ?? process.env.OPENAI_BASE_URL ?? "https://api.openai.com";
+  const parsed = new URL(url2);
+  const useHttp = parsed.protocol === "http:";
+  const reqFn = useHttp ? httpRequest2 : httpsRequest2;
+  const body = JSON.stringify({
+    model: config2.model ?? DEFAULT_MODEL,
+    messages,
+    temperature: options2?.temperature ?? 0.3,
+    max_tokens: options2?.maxTokens ?? 2e3,
+    ...options2?.jsonMode ? { response_format: { type: "json_object" } } : {}
+  });
+  return new Promise((resolve2, reject) => {
+    const reqOptions = {
+      hostname: parsed.hostname,
+      path: `${parsed.pathname.replace(/\/$/, "")}/v1/chat/completions`,
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${config2.apiKey}`,
+        "Content-Length": Buffer.byteLength(body)
+      }
+    };
+    if (parsed.port) reqOptions.port = Number(parsed.port);
+    const req = reqFn(reqOptions, (res) => {
+      const chunks = [];
+      res.on("data", (chunk) => chunks.push(chunk));
+      res.on("end", () => {
+        const raw = Buffer.concat(chunks).toString("utf-8");
+        try {
+          const data = JSON.parse(raw);
+          if (data.error) {
+            reject(new Error(`LLM API error: ${data.error.message ?? JSON.stringify(data.error)}`));
+            return;
+          }
+          const content = data.choices?.[0]?.message?.content;
+          if (typeof content !== "string") {
+            reject(new Error(`Unexpected LLM response: ${raw.slice(0, 200)}`));
+            return;
+          }
+          resolve2(content);
+        } catch (e) {
+          reject(new Error(`Failed to parse LLM response: ${raw.slice(0, 200)}`));
+        }
+      });
+    });
+    req.on("error", reject);
+    req.write(body);
+    req.end();
+  });
+}
+
+// src/commands/extract.ts
+init_embeddings();
+init_sync();
+import { execFile as execFile3 } from "node:child_process";
+import { promisify as promisify2 } from "node:util";
+import { dirname as dirname9 } from "node:path";
+var execFileAsync = promisify2(execFile3);
+var SYSTEM_PROMPT = `You are a knowledge extraction agent for a Zettelkasten (memex) system. Your job is to extract durable, reusable facts from session transcripts.
+
+Rules:
+- Extract 0-3 facts per session. Quality over quantity. Zero is fine if nothing is worth remembering.
+- Each fact must be a standalone insight, decision, pattern, or piece of knowledge \u2014 NOT a log entry or task status.
+- Skip ephemeral information (debugging steps, temporary workarounds, routine operations).
+- Focus on: architectural decisions, design patterns, tool behaviors, ecosystem insights, reusable knowledge, identity/preference updates.
+- Each fact needs a slug (kebab-case, descriptive), title, type, content (2-5 sentences), confidence (0-1), relevant tags, and suggested wikilinks.
+
+Fact types:
+- identity: who the agent/user is, values, principles
+- preference: how they like things done
+- goal: what they're working toward
+- project: project-specific knowledge (architecture, API, quirks)
+- decision: an important decision and its rationale
+- insight: a cross-cutting realization or discovery
+- pattern: a reusable approach or workflow
+
+Respond in JSON:
+{
+  "facts": [
+    {
+      "slug": "kebab-case-slug",
+      "title": "Human-readable title",
+      "type": "insight|decision|pattern|project|identity|preference|goal",
+      "content": "2-5 sentences describing the fact. Include context and reasoning.",
+      "confidence": 0.7,
+      "tags": ["tag1", "tag2"],
+      "links": ["existing-card-slug-1", "related-concept"]
+    }
+  ]
+}
+
+If nothing is worth extracting, respond: { "facts": [] }`;
+var SIMILARITY_THRESHOLD = 0.78;
+async function extractCommand(store, transcript, options2) {
+  if (!transcript.trim()) {
+    return { output: "No input provided. Pipe a session transcript to stdin.", exitCode: 1 };
+  }
+  const maxChars = 6e3;
+  const truncated = transcript.length > maxChars ? transcript.slice(0, maxChars) + "\n\n[... truncated ...]" : transcript;
+  const apiKey = options2.config.openaiApiKey ?? process.env.OPENAI_API_KEY;
+  const llmCommandAvail = options2.config.llmCommand ?? process.env.MEMEX_LLM_COMMAND;
+  if (!apiKey && !llmCommandAvail) {
+    return { output: "Error: No LLM configured. Set openaiApiKey in .memexrc, OPENAI_API_KEY env, or set llmCommand/.env MEMEX_LLM_COMMAND.", exitCode: 1 };
+  }
+  const llmConfig = {
+    apiKey: apiKey ?? "",
+    baseUrl: options2.config.openaiBaseUrl ?? process.env.OPENAI_BASE_URL,
+    model: options2.model ?? "gpt-4o-mini"
+  };
+  let facts;
+  try {
+    const fullPrompt = `${SYSTEM_PROMPT}
+
+Extract facts from this session transcript:
+
+${truncated}
+
+Respond with JSON only.`;
+    const llmCommand = options2.config.llmCommand ?? process.env.MEMEX_LLM_COMMAND;
+    let response;
+    if (llmCommand) {
+      const args = llmCommand.split(/\s+/);
+      const cmd = args.shift();
+      args.push("--prompt", fullPrompt);
+      const { stdout } = await execFileAsync(cmd, args, {
+        timeout: 6e4,
+        maxBuffer: 1024 * 1024
+      });
+      response = stdout.trim();
+    } else {
+      const messages = [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: `Extract facts from this session transcript:
+
+${truncated}` }
+      ];
+      response = await chatCompletion(messages, llmConfig, {
+        temperature: 0.2,
+        maxTokens: 1500,
+        jsonMode: true
+      });
+    }
+    const jsonMatch = response.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return { output: `LLM returned no valid JSON:
+${response.slice(0, 500)}`, exitCode: 1 };
+    }
+    const parsed = JSON.parse(jsonMatch[0]);
+    facts = Array.isArray(parsed.facts) ? parsed.facts : [];
+    facts = facts.filter(
+      (f) => typeof f.slug === "string" && f.slug.length > 0 && typeof f.title === "string" && typeof f.content === "string" && typeof f.confidence === "number" && f.confidence >= 0 && f.confidence <= 1
+    );
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { output: `LLM extraction failed: ${msg}`, exitCode: 1 };
+  }
+  if (facts.length === 0) {
+    return { output: "No facts extracted from this session (nothing worth remembering).", exitCode: 0 };
+  }
+  let provider = null;
+  let cache = null;
+  try {
+    provider = await createEmbeddingProvider({
+      type: options2.config.embeddingProvider,
+      openaiApiKey: options2.config.openaiApiKey,
+      openaiBaseUrl: options2.config.openaiBaseUrl,
+      localModelPath: options2.config.localModelPath,
+      ollamaModel: options2.config.ollamaModel,
+      ollamaBaseUrl: options2.config.ollamaBaseUrl
+    });
+    cache = new EmbeddingCache(options2.memexHome, provider.model);
+    await cache.load();
+    await embedCards(store, provider, cache);
+    await cache.save();
+  } catch {
+    provider = null;
+    cache = null;
+  }
+  const results = [];
+  const today = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
+  for (const fact of facts) {
+    let bestMatch = null;
+    if (provider && cache) {
+      try {
+        const [queryVector] = await provider.embed([`${fact.title}
+${fact.content}`]);
+        const allCards = await store.scanAll();
+        for (const card of allCards) {
+          const entry = cache.get(card.slug);
+          if (!entry) continue;
+          const score = cosineSimilarity(queryVector, entry.vector);
+          if (score > (bestMatch?.score ?? 0)) {
+            bestMatch = { slug: card.slug, score };
+          }
+        }
+      } catch {
+      }
+    }
+    if (bestMatch && bestMatch.score >= SIMILARITY_THRESHOLD) {
+      if (options2.dryRun) {
+        results.push(`[DRY RUN] Would reinforce "${bestMatch.slug}" (similarity: ${bestMatch.score.toFixed(3)}) with:
+  ${fact.title}`);
+      } else {
+        try {
+          const raw = await store.readCard(bestMatch.slug);
+          const { data, content } = parseFrontmatter(raw);
+          const count = (typeof data.evidence_count === "number" ? data.evidence_count : 0) + 1;
+          data.evidence_count = count;
+          data.last_reinforced = today;
+          data.modified = today;
+          if (count >= 3 && data.status !== "active") data.status = "active";
+          if (data.status === "stale") data.status = count >= 3 ? "active" : "draft";
+          const appendix = `
+
+## Evidence (${today})
+
+${fact.content}`;
+          const output = stringifyFrontmatter(content + appendix, data);
+          await store.writeCard(bestMatch.slug, output);
+          results.push(`\u2713 Reinforced "${bestMatch.slug}" (similarity: ${bestMatch.score.toFixed(3)}, evidence: ${count})`);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          results.push(`\u2717 Failed to reinforce "${bestMatch.slug}": ${msg}`);
+        }
+      }
+    } else {
+      const tags = Array.isArray(fact.tags) ? fact.tags : [];
+      if (!tags.includes(fact.type)) tags.unshift(fact.type);
+      if (!tags.includes("auto-extracted")) tags.push("auto-extracted");
+      const links = Array.isArray(fact.links) ? fact.links : [];
+      const linksSection = links.length > 0 ? `
+
+## Related
+
+${links.map((l) => `- [[${l}]]`).join("\n")}` : "";
+      const cardContent = `---
+title: ${fact.title}
+slug: ${fact.slug}
+tags: [${tags.join(", ")}]
+created: ${today}
+modified: ${today}
+source: auto-extraction
+evidence_count: 1
+last_reinforced: ${today}
+confidence: ${fact.confidence}
+status: draft
+---
+
+# ${fact.title}
+
+${fact.content}${linksSection}
+`;
+      if (options2.dryRun) {
+        results.push(`[DRY RUN] Would create draft card "${fact.slug}":
+  ${fact.title}
+  confidence: ${fact.confidence}, tags: [${tags.join(", ")}]`);
+      } else {
+        try {
+          const existing = await store.resolve(fact.slug);
+          if (existing) {
+            results.push(`\u2298 Skipped "${fact.slug}" (card already exists)`);
+            continue;
+          }
+          await store.writeCard(fact.slug, cardContent);
+          results.push(`\u2713 Created draft card "${fact.slug}" (confidence: ${fact.confidence})`);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          results.push(`\u2717 Failed to create "${fact.slug}": ${msg}`);
+        }
+      }
+    }
+  }
+  if (!options2.dryRun) {
+    await autoSync(dirname9(store.cardsDir));
+  }
+  const header = options2.dryRun ? "# Extraction Preview (dry run)" : "# Extraction Results";
+  return {
+    output: `${header}
+
+Extracted ${facts.length} fact(s) from session:
+
+${results.join("\n")}`,
+    exitCode: 0
+  };
+}
+
 // src/cli.ts
 init_flomo();
-var __dirname3 = dirname11(fileURLToPath3(import.meta.url));
-var pkg2 = JSON.parse(readFileSync2(join13(__dirname3, "..", "package.json"), "utf-8"));
+var __dirname3 = dirname12(fileURLToPath3(import.meta.url));
+var pkg2 = JSON.parse(readFileSync2(join14(__dirname3, "..", "package.json"), "utf-8"));
 async function getStore(opts) {
   const home = await resolveMemexHome();
   await warnIfEmptyCards(home);
   const config2 = await readConfig(home);
   const nestedSlugs = opts?.nested ?? config2.nestedSlugs;
-  return new CardStore(join13(home, "cards"), join13(home, "archive"), nestedSlugs);
+  return new CardStore(join14(home, "cards"), join14(home, "archive"), nestedSlugs);
 }
 function exit(code) {
   if (process.stdout.writableLength === 0) {
@@ -41181,8 +41476,8 @@ program2.command("import [source]").description("Import memories from other tool
 });
 program2.command("doctor").description("Check memex health and configuration").option("--check-collisions", "Check for slug collisions in basename mode").action(async (opts) => {
   const home = await resolveMemexHome();
-  const cardsDir = join13(home, "cards");
-  const archiveDir = join13(home, "archive");
+  const cardsDir = join14(home, "cards");
+  const archiveDir = join14(home, "archive");
   if (opts.checkCollisions) {
     const result = await doctorCommand(cardsDir, archiveDir);
     if (result.output) process.stdout.write(result.output + "\n");
@@ -41194,8 +41489,8 @@ program2.command("doctor").description("Check memex health and configuration").o
 });
 program2.command("migrate").description("Migrate memex configuration").option("--enable-nested", "Enable nestedSlugs in config").action(async (opts) => {
   const home = await resolveMemexHome();
-  const cardsDir = join13(home, "cards");
-  const archiveDir = join13(home, "archive");
+  const cardsDir = join14(home, "cards");
+  const archiveDir = join14(home, "archive");
   if (opts.enableNested) {
     const result = await migrateCommand(home, cardsDir, archiveDir);
     if (result.output) process.stdout.write(result.output + "\n");
@@ -41207,6 +41502,26 @@ program2.command("migrate").description("Migrate memex configuration").option("-
     process.stderr.write("No migration specified. Use --enable-nested to enable nestedSlugs.\n");
     exit(1);
   }
+});
+program2.command("extract").description("Extract facts from a session transcript (stdin) and route to cards").option("--dry-run", "Preview without writing").option("--model <model>", "LLM model for extraction (default: gpt-4o-mini)").option("--file <path>", "Read transcript from file instead of stdin").action(async (opts) => {
+  const home = await resolveMemexHome();
+  const config2 = await readConfig(home);
+  const store = await getStore();
+  let transcript;
+  if (opts.file) {
+    const { readFile: readFile9 } = await import("node:fs/promises");
+    transcript = await readFile9(opts.file, "utf-8");
+  } else {
+    transcript = await readStdin();
+  }
+  const result = await extractCommand(store, transcript, {
+    dryRun: opts.dryRun,
+    model: opts.model,
+    memexHome: home,
+    config: config2
+  });
+  if (result.output) process.stdout.write(result.output + "\n");
+  exit(result.exitCode);
 });
 var lifecycle = program2.command("lifecycle").description("Card lifecycle management: audit, reinforce, init");
 lifecycle.command("audit").description("Scan all cards and report lifecycle status distribution").action(async () => {
