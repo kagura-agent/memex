@@ -262,7 +262,7 @@ program
     const archiveDir = join(home, "archive");
 
     if (opts.checkCollisions) {
-      const result = await doctorCommand(cardsDir, archiveDir);
+      const result = await doctorCommand(cardsDir, archiveDir, opts.json);
       if (result.output) process.stdout.write(result.output + "\n");
       exit(result.exitCode);
     } else {

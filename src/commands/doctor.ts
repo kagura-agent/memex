@@ -211,7 +211,8 @@ export async function doctorRunAll(
 /** Legacy entry point for backward compat (collision check only) — preserves original output format */
 export async function doctorCommand(
   cardsDir: string,
-  archiveDir: string
+  archiveDir: string,
+  json?: boolean
 ): Promise<DoctorResult> {
   try {
     const basenameStore = new CardStore(cardsDir, archiveDir, false);
@@ -239,6 +240,12 @@ export async function doctorCommand(
     }
 
     if (collisions.length === 0) {
+      if (json) {
+        return {
+          exitCode: 0,
+          output: JSON.stringify([{ name: "Slug collisions", status: "ok" }], null, 2),
+        };
+      }
       return {
         exitCode: 0,
         output: "No slug collisions found. Safe to enable nestedSlugs.",
@@ -256,6 +263,17 @@ export async function doctorCommand(
     }
     lines.push("Resolve these collisions before enabling nestedSlugs.");
 
+    if (json) {
+      const details = collisions.map((c) => ({
+        slug: c.slug,
+        paths: c.paths,
+        fullPaths: c.fullPaths,
+      }));
+      return {
+        exitCode: 1,
+        output: JSON.stringify([{ name: "Slug collisions", status: "error", details }], null, 2),
+      };
+    }
     return { exitCode: 1, output: lines.join("\n") };
   } catch (e) {
     return {
