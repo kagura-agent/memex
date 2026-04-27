@@ -74,6 +74,30 @@ describe("doctorCommand (legacy collision check)", () => {
     expect(result.output).toContain("would become: card");
     expect(result.output).toContain("would become: nested/deep/card");
   });
+
+  it("outputs JSON when --json flag is passed (no collisions)", async () => {
+    await writeFile(join(cardsDir, "foo.md"), "foo content");
+
+    const result = await doctorCommand(cardsDir, archiveDir, true);
+    expect(result.exitCode).toBe(0);
+    const parsed = JSON.parse(result.output!);
+    expect(parsed).toEqual([{ name: "Slug collisions", status: "ok" }]);
+  });
+
+  it("outputs JSON when --json flag is passed (with collisions)", async () => {
+    await mkdir(join(cardsDir, "sub"), { recursive: true });
+    await writeFile(join(cardsDir, "foo.md"), "foo root");
+    await writeFile(join(cardsDir, "sub", "foo.md"), "foo sub");
+
+    const result = await doctorCommand(cardsDir, archiveDir, true);
+    expect(result.exitCode).toBe(1);
+    const parsed = JSON.parse(result.output!);
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0].name).toBe("Slug collisions");
+    expect(parsed[0].status).toBe("error");
+    expect(parsed[0].details).toBeDefined();
+    expect(parsed[0].details[0].slug).toBe("foo");
+  });
 });
 
 describe("checkOrphans", () => {
