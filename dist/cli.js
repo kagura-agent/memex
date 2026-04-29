@@ -7189,10 +7189,11 @@ var init_parser = __esm({
 });
 
 // src/lib/sync.ts
-import { readFile as readFile3, writeFile as writeFile2, mkdir as mkdir2 } from "node:fs/promises";
+import { readFile as readFile3, writeFile as writeFile2, mkdir as mkdir2, rename as rename2 } from "node:fs/promises";
 import { join as join3 } from "node:path";
 import { execFile as execFileCb } from "node:child_process";
 import { promisify } from "node:util";
+import { randomBytes } from "node:crypto";
 async function readSyncConfig(home) {
   try {
     const raw = await readFile3(join3(home, CONFIG_FILE), "utf-8");
@@ -7203,11 +7204,10 @@ async function readSyncConfig(home) {
 }
 async function writeSyncConfig(home, config2) {
   await mkdir2(home, { recursive: true });
-  await writeFile2(
-    join3(home, CONFIG_FILE),
-    JSON.stringify(config2, null, 2),
-    "utf-8"
-  );
+  const target = join3(home, CONFIG_FILE);
+  const tmp = target + "." + randomBytes(4).toString("hex") + ".tmp";
+  await writeFile2(tmp, JSON.stringify(config2, null, 2), "utf-8");
+  await rename2(tmp, target);
 }
 async function gitAvailable() {
   try {
@@ -7304,11 +7304,23 @@ var init_sync = __esm({
               "gh CLI is not authenticated. Run `gh auth login` first."
             );
           }
+          let ghUser;
+          try {
+            const { stdout: userOut } = await execFile("gh", [
+              "api",
+              "user",
+              "-q",
+              ".login"
+            ]);
+            ghUser = userOut.trim();
+          } catch {
+            throw new Error("Cannot determine GitHub username. Ensure `gh auth login` is complete.");
+          }
           try {
             const { stdout } = await execFile("gh", [
               "repo",
               "view",
-              "memex-cards",
+              `${ghUser}/memex-cards`,
               "--json",
               "url",
               "-q",
@@ -7386,15 +7398,28 @@ var init_sync = __esm({
           await this.normalizeBranch();
           try {
             const remoteBranch = await detectRemoteBranch(this.home);
-            await execFile("git", [
-              "-C",
-              this.home,
-              "merge",
-              remoteBranch,
-              "--allow-unrelated-histories",
-              "--no-edit"
-            ]);
-          } catch {
+            try {
+              await execFile("git", [
+                "-C",
+                this.home,
+                "merge",
+                remoteBranch,
+                "--allow-unrelated-histories",
+                "--no-edit"
+              ]);
+            } catch (mergeErr) {
+              try {
+                await execFile("git", ["-C", this.home, "merge", "--abort"]);
+              } catch {
+              }
+              throw new Error(
+                `Merge conflict during init. Your local cards conflict with remote.
+Run: cd ${this.home} && git fetch origin && git merge origin/main --allow-unrelated-histories
+Then resolve conflicts and run \`memex sync --init\` again.`
+              );
+            }
+          } catch (err) {
+            if (err.message?.includes("Merge conflict")) throw err;
           }
         } catch {
         }
@@ -40572,9 +40597,36 @@ Tip: Run \`memex sync on\` to auto-sync after every write.`
   }
   const config2 = await readSyncConfig(home);
   if (!config2.remote) {
+    let hint = "";
+    try {
+      const { execFile: execFileCb2 } = await import("node:child_process");
+      const { promisify: promisify2 } = await import("node:util");
+      const execFile3 = promisify2(execFileCb2);
+      await execFile3("gh", ["--version"]);
+      try {
+        const { stdout: user } = await execFile3("gh", ["api", "user", "-q", ".login"]);
+        const { stdout: repoUrl } = await execFile3("gh", [
+          "repo",
+          "view",
+          `${user.trim()}/memex-cards`,
+          "--json",
+          "url",
+          "-q",
+          ".url"
+        ]);
+        hint = `
+
+Detected existing repo: ${repoUrl.trim()}
+Run: memex sync --init`;
+      } catch {
+        hint = "\n\nNo existing memex-cards repo found. Run: memex sync --init\n(This will create a private GitHub repo automatically.)";
+      }
+    } catch {
+      hint = "\n\nInstall gh CLI (https://cli.github.com) for auto-setup,\nor provide a URL: memex sync --init <git-url>";
+    }
     return {
       success: false,
-      error: "Not initialized. Run `memex sync --init` first."
+      error: `Sync not initialized.${hint}`
     };
   }
   const result = await adapter.sync();
