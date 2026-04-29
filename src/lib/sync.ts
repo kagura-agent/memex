@@ -209,6 +209,33 @@ export class GitAdapter implements SyncAdapter {
       }
     }
 
+    // Pre-align local branch to match remote default branch BEFORE first commit.
+    // This prevents the initial commit from landing on the wrong branch
+    // (e.g. master vs main) when git init.defaultBranch differs from the remote.
+    let targetBranch = "main"; // fallback
+    try {
+      const { stdout } = await execFile("git", [
+        "-C", this.home, "ls-remote", "--symref", "origin", "HEAD",
+      ]);
+      const match = stdout.match(/ref: refs\/heads\/(\S+)\s/);
+      if (match) {
+        targetBranch = match[1];
+      }
+    } catch {
+      // ls-remote failed (empty remote or offline) — use fallback
+    }
+
+    // Set HEAD to target branch before any commits exist.
+    // This ensures the first commit lands on the correct branch name
+    // regardless of the local git init.defaultBranch setting.
+    try {
+      await execFile("git", [
+        "-C", this.home, "symbolic-ref", "HEAD", `refs/heads/${targetBranch}`,
+      ]);
+    } catch {
+      // symbolic-ref failed — will try normalizeBranch after commit
+    }
+
     // Commit local content first
     // Stage .gitignore so there's always at least one file to commit
     // (cards/ and archive/ may be empty dirs, which git can't track).
@@ -228,17 +255,27 @@ export class GitAdapter implements SyncAdapter {
     }
 
     // Fetch remote — if it has existing commits, merge them before pushing
+    let fetched = false;
     try {
       await execFile("git", ["-C", this.home, "fetch", "origin"]);
+      fetched = true;
+    } catch {
+      // Fetch failed (offline / empty remote) — push will handle it
+    }
 
-      // Normalize local branch to match remote default branch.
-      // Without this, machines with different git init.defaultBranch settings
-      // (e.g. main vs master) create divergent branches on the same remote.
+    if (fetched) {
+      // Safety net: normalize branch name after commit in case symbolic-ref
+      // didn't take effect (e.g. repo already had commits on wrong branch).
       await this.normalizeBranch();
 
       // Check if remote has any commits
       try {
         const remoteBranch = await detectRemoteBranch(this.home);
+        // Verify the remote branch actually exists (detectRemoteBranch may
+        // return a fallback like origin/main even for empty remotes).
+        await execFile("git", [
+          "-C", this.home, "rev-parse", "--verify", remoteBranch,
+        ]);
         // Remote has commits — merge with allow-unrelated-histories
         try {
           await execFile("git", [
@@ -258,8 +295,6 @@ export class GitAdapter implements SyncAdapter {
         if ((err as Error).message?.includes("Merge conflict")) throw err;
         // No remote branch yet — fresh repo, push will create it
       }
-    } catch {
-      // Fetch failed (offline / empty remote) — push will handle it
     }
 
     await execFile("git", ["-C", this.home, "push", "-u", "origin", "HEAD"]);

@@ -385,6 +385,49 @@ describe("GitAdapter", () => {
     await rm(seed, { recursive: true });
   }, 20000);
 
+  it("init with branch mismatch does not create orphan remote branch (#82)", async () => {
+    // Reproduce #82: remote has 'main' as default, local git defaults to 'master'.
+    // After init, there should be NO orphan 'master' branch on the remote,
+    // and subsequent sync (pull) should succeed without merge conflicts.
+    const bare = await mkdtemp(join(tmpdir(), "memex-bare-"));
+    await execFile("git", ["init", "--bare", bare]);
+    const seed = await mkdtemp(join(tmpdir(), "memex-seed-"));
+    await execFile("git", ["init", seed]);
+    await execFile("git", ["-C", seed, "checkout", "-b", "main"]);
+    await mkdir(join(seed, "cards"), { recursive: true });
+    await writeFile(
+      join(seed, "cards", "existing.md"),
+      "---\ntitle: Existing\ncreated: 2026-04-28\n---\nexisting card",
+      "utf-8"
+    );
+    await execFile("git", ["-C", seed, "add", "."]);
+    await execFile("git", ["-C", seed, "commit", "-m", "seed"]);
+    await execFile("git", ["-C", seed, "remote", "add", "origin", bare]);
+    await execFile("git", ["-C", seed, "push", "-u", "origin", "main"]);
+    await execFile("git", ["-C", bare, "symbolic-ref", "HEAD", "refs/heads/main"]);
+
+    // Local repo starts on 'master' (simulating old git default)
+    await execFile("git", ["init", home]);
+    await execFile("git", ["-C", home, "checkout", "-b", "master"]);
+
+    const adapter = new GitAdapter(home);
+    await adapter.init(bare);
+
+    // Verify no orphan 'master' on remote
+    const { stdout: remoteBranches } = await execFile("git", [
+      "-C", bare, "branch", "--list",
+    ]);
+    expect(remoteBranches).not.toContain("master");
+    expect(remoteBranches).toContain("main");
+
+    // Verify subsequent sync (pull) succeeds without merge conflict
+    const result = await adapter.pull();
+    expect(result.success).toBe(true);
+
+    await rm(bare, { recursive: true });
+    await rm(seed, { recursive: true });
+  }, 20000);
+
   it("init accepts https:// URL (validation only)", async () => {
     const adapter = new GitAdapter(home);
     try {
